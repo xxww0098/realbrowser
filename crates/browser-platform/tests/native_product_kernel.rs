@@ -1,8 +1,7 @@
-use std::{
-    process::Command,
-    thread,
-    time::{Duration, Instant},
-};
+use std::{thread, time::Duration};
+
+#[cfg(target_os = "macos")]
+use std::{process::Command, time::Instant};
 
 use browser_core::{BrowserHost, BrowserRuntimeRecord, IdentityId, LaunchPlan};
 use browser_platform::SystemBrowserHost;

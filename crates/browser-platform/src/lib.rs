@@ -695,9 +695,9 @@ mod tests {
         time::Duration,
     };
 
-    use browser_core::{
-        BrowserHost, BrowserRuntimeRecord, IdentityId, LaunchPlan, TerminationKind,
-    };
+    #[cfg(target_os = "macos")]
+    use browser_core::LaunchPlan;
+    use browser_core::{BrowserHost, BrowserRuntimeRecord, IdentityId, TerminationKind};
     use parking_lot::Mutex;
     #[cfg(unix)]
     use sha2::{Digest, Sha256};
