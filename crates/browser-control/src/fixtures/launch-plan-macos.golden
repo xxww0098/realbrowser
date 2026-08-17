@@ -1,0 +1,14 @@
+identity_id=00000000-0000-0000-0000-000000000001
+executable=/Applications/RealBrowser.app/Contents/Resources/realbrowser-kernel/RealBrowser.app/Contents/MacOS/RealBrowser
+profile_root=$DATA_ROOT/profiles/00000000-0000-0000-0000-000000000001
+startup_url=about:blank
+browser_version=151.0.8012.24
+arguments:
+  --window-size=1280,720
+  --lang=ru-RU
+  --force-webrtc-ip-handling-policy=disable_non_proxied_udp
+  --realbrowser-persona-file=$DATA_ROOT/profiles/00000000-0000-0000-0000-000000000001/.realbrowser/persona.json
+  --proxy-server=socks5://127.0.0.1:10800
+  --disable-quic
+  --remote-debugging-port=0
+environment:

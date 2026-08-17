@@ -1,0 +1,19 @@
+[package]
+name = "browser-core"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+
+[lib]
+doctest = false
+
+[dependencies]
+browser-network.workspace = true
+browser-persona.workspace = true
+thiserror.workspace = true
+url.workspace = true
+uuid = { workspace = true, features = ["std"] }
+
+[lints]
+workspace = true

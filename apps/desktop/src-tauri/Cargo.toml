@@ -1,0 +1,36 @@
+[package]
+name = "realbrowser-desktop"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+
+[lib]
+name = "realbrowser_desktop"
+crate-type = ["staticlib", "cdylib", "rlib"]
+doctest = false
+
+[build-dependencies]
+tauri-build.workspace = true
+
+[dependencies]
+browser-control.workspace = true
+browser-core.workspace = true
+browser-network.workspace = true
+browser-platform.workspace = true
+browser-persona.workspace = true
+browser-persona-runtime.workspace = true
+browser-storage.workspace = true
+serde = { workspace = true, features = ["derive", "std"] }
+tauri.workspace = true
+tracing.workspace = true
+tracing-subscriber = { workspace = true, features = ["ansi", "env-filter", "fmt", "std"] }
+
+[dev-dependencies]
+serde_json.workspace = true
+tempfile.workspace = true
+tungstenite = { workspace = true, features = ["handshake"] }
+uuid = { workspace = true, features = ["std"] }
+
+[lints]
+workspace = true

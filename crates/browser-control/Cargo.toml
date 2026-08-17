@@ -1,0 +1,26 @@
+[package]
+name = "browser-control"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+
+[lib]
+doctest = false
+
+[dependencies]
+browser-core.workspace = true
+browser-network.workspace = true
+browser-persona.workspace = true
+browser-persona-runtime.workspace = true
+browser-profile.workspace = true
+parking_lot.workspace = true
+serde_json.workspace = true
+thiserror.workspace = true
+uuid = { workspace = true, features = ["std", "v4"] }
+
+[dev-dependencies]
+tempfile.workspace = true
+
+[lints]
+workspace = true

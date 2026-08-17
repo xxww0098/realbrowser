@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <title>RealBrowser R — SVG 1:1 对比</title>
+  <style>
+    :root { color-scheme: light; }
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #F4F6FA;
+      color: #0F172A;
+      padding: 32px;
+    }
+    h1 { font-size: 22px; margin: 0 0 6px; }
+    p { margin: 0 0 28px; color: #64748B; font-size: 14px; }
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+      max-width: 920px;
+    }
+    .card {
+      background: #fff;
+      border: 1px solid #E2E8F0;
+      border-radius: 16px;
+      padding: 20px;
+      text-align: center;
+    }
+    .card h2 { font-size: 14px; margin: 0 0 16px; color: #334155; font-weight: 600; }
+    .stage {
+      width: 280px;
+      height: 280px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #fff;
+      border: 1px dashed #CBD5E1;
+      border-radius: 12px;
+    }
+    .stage img, .stage object { width: 86%; height: 86%; object-fit: contain; }
+    .sizes {
+      display: flex;
+      gap: 18px;
+      justify-content: center;
+      align-items: end;
+      margin-top: 28px;
+      max-width: 920px;
+    }
+    .size { text-align: center; color: #64748B; font-size: 12px; }
+    .size > div {
+      background: #fff;
+      border: 1px solid #E2E8F0;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 8px;
+    }
+  </style>
+</head>
+<body>
+  <h1>RealBrowser 图标 1:1 SVG 复刻</h1>
+  <p>30° 等轴测折面 R · 从原图像素轮廓拟合 · 无描边锐角多边形</p>
+
+  <div class="grid">
+    <div class="card">
+      <h2>原图 PNG</h2>
+      <div class="stage">
+        <img src="./logo_ref.png" alt="original" />
+      </div>
+    </div>
+    <div class="card">
+      <h2>SVG 矢量</h2>
+      <div class="stage">
+        <img src="../apps/desktop/src/assets/logo.svg" alt="svg" />
+      </div>
+    </div>
+  </div>
+
+  <div class="sizes">
+    <div class="size">
+      <div style="width:128px;height:128px"><img src="../apps/desktop/src/assets/logo.svg" width="112" height="112" alt="" /></div>
+      128
+    </div>
+    <div class="size">
+      <div style="width:64px;height:64px"><img src="../apps/desktop/src/assets/logo.svg" width="52" height="52" alt="" /></div>
+      64
+    </div>
+    <div class="size">
+      <div style="width:32px;height:32px"><img src="../apps/desktop/src/assets/logo.svg" width="26" height="26" alt="" /></div>
+      32
+    </div>
+    <div class="size">
+      <div style="width:24px;height:24px"><img src="../apps/desktop/src/assets/logo.svg" width="20" height="20" alt="" /></div>
+      24
+    </div>
+    <div class="size">
+      <div style="width:16px;height:16px"><img src="../apps/desktop/src/assets/logo.svg" width="14" height="14" alt="" /></div>
+      16
+    </div>
+  </div>
+</body>
+</html>

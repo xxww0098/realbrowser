@@ -1,0 +1,436 @@
+diff --git a/chrome/app/chrome_main_delegate.cc b/chrome/app/chrome_main_delegate.cc
+index df8f9455..7cb0c0af 100644
+--- a/chrome/app/chrome_main_delegate.cc
++++ b/chrome/app/chrome_main_delegate.cc
+@@ -6,6 +6,9 @@
+ 
+ #include <stddef.h>
+ 
++#include <algorithm>
++#include <initializer_list>
+ #include <string>
++#include <string_view>
+ #include <variant>
+ 
+@@ -21,6 +23,7 @@
+ #include "base/functional/bind.h"
+ #include "base/i18n/rtl.h"
+ #include "base/immediate_crash.h"
++#include "base/json/json_reader.h"
+ #include "base/lazy_instance.h"
+ #include "base/metrics/histogram_macros.h"
+ #include "base/notreached.h"
+@@ -244,6 +247,65 @@ const size_t ChromeMainDelegate::kNonWildcardDomainNonPortSchemesSize =
+ 
+ namespace {
+ 
++constexpr char kRealBrowserPersonaFileSwitch[] =
++    "realbrowser-persona-file";
++constexpr char kRealBrowserCanvasSeedSwitch[] =
++    "realbrowser-canvas-seed";
++constexpr int kRealBrowserPersonaSchemaVersion = 1;
++
++bool IsHexSeed(std::string_view seed) {
++  return seed.size() == 64 &&
++         std::ranges::all_of(seed, [](char value) {
++           return (value >= '0' && value <= '9') ||
++                  (value >= 'a' && value <= 'f') ||
++                  (value >= 'A' && value <= 'F');
++         });
++}
++
++bool HasExactlyKeys(
++    const base::Value::Dict& dictionary,
++    std::initializer_list<std::string_view> expected_keys) {
++  return dictionary.size() == expected_keys.size() &&
++         std::ranges::all_of(expected_keys, [&dictionary](std::string_view key) {
++           return dictionary.contains(key);
++         });
++}
++
++void LoadRealBrowserPersona(base::CommandLine* command_line) {
++  CHECK(command_line->HasSwitch(kRealBrowserPersonaFileSwitch))
++      << "RealBrowser requires --realbrowser-persona-file";
++  CHECK(!command_line->HasSwitch(kRealBrowserCanvasSeedSwitch))
++      << "The internal RealBrowser canvas seed cannot be supplied directly";
++  const base::FilePath persona_path =
++      command_line->GetSwitchValuePath(kRealBrowserPersonaFileSwitch);
++  CHECK(persona_path.IsAbsolute());
++
++  std::string contents;
++  CHECK(base::ReadFileToString(persona_path, &contents))
++      << "Cannot read RealBrowser persona file";
++  auto parsed = base::JSONReader::Read(contents);
++  CHECK(parsed.has_value() && parsed->is_dict())
++      << "Invalid RealBrowser persona JSON";
++  const base::Value::Dict& persona = parsed->GetDict();
++  CHECK(HasExactlyKeys(persona, {"schema_version", "persona_id", "seed",
++                                 "engine_major", "surfaces"}));
++  CHECK_EQ(persona.FindInt("schema_version").value_or(-1),
++           kRealBrowserPersonaSchemaVersion);
++  const std::string* persona_id = persona.FindString("persona_id");
++  CHECK(persona_id && !persona_id->empty());
++  CHECK_EQ(persona.FindInt("engine_major").value_or(-1),
++           version_info::GetMajorVersionNumberAsInt());
++  const base::Value::Dict* surfaces = persona.FindDict("surfaces");
++  CHECK(surfaces && HasExactlyKeys(*surfaces, {"canvas"}));
++  const base::Value::Dict* canvas = surfaces->FindDict("canvas");
++  CHECK(canvas && HasExactlyKeys(*canvas, {"mode"}));
++  const std::string* canvas_mode = canvas->FindString("mode");
++  CHECK(canvas_mode && *canvas_mode == "seeded_noise");
++  const std::string* seed = persona.FindString("seed");
++  CHECK(seed && IsHexSeed(*seed));
++  command_line->AppendSwitchASCII(kRealBrowserCanvasSeedSwitch, *seed);
++}
++
+ #if BUILDFLAG(IS_WIN)
+ // Early versions of Chrome incorrectly registered a chromehtml: URL handler,
+ // which gives us nothing but trouble. Avoid launching chrome this way since
+@@ -1333,11 +1395,17 @@ void ChromeMainDelegate::SetUpInstallerPreferences(
+ #endif  // BUILDFLAG(IS_MAC)
+ 
+ void ChromeMainDelegate::PreSandboxStartup() {
+-  const base::CommandLine& command_line =
+-      *base::CommandLine::ForCurrentProcess();
++  base::CommandLine* mutable_command_line =
++      base::CommandLine::ForCurrentProcess();
++  const base::CommandLine& command_line = *mutable_command_line;
+   std::string process_type =
+       command_line.GetSwitchValueASCII(switches::kProcessType);
+ 
++  if (process_type.empty() && !command_line.HasSwitch(switches::kVersion) &&
++      !command_line.HasSwitch(switches::kProductVersion)) {
++    LoadRealBrowserPersona(mutable_command_line);
++  }
++
+   crash_reporter::InitializeCrashKeys();
+ 
+ #if BUILDFLAG(IS_POSIX)
+diff --git a/chrome/browser/chrome_content_browser_client.cc b/chrome/browser/chrome_content_browser_client.cc
+index 89df9311..00a9edec 100644
+--- a/chrome/browser/chrome_content_browser_client.cc
++++ b/chrome/browser/chrome_content_browser_client.cc
+@@ -813,6 +813,9 @@ using web_app::ChromeContentBrowserClientIsolatedWebAppsPart;
+ 
+ namespace {
+ 
++constexpr char kRealBrowserCanvasSeedSwitch[] =
++    "realbrowser-canvas-seed";
++
+ const char kAIManagerUserDataKey[] = "ai_manager";
+ 
+ #if BUILDFLAG(IS_MAC)
+@@ -2901,6 +2904,10 @@ void ChromeContentBrowserClient::AppendExtraCommandLineSwitches(
+ #endif
+ 
+   if (process_type == switches::kRendererProcess) {
++    CHECK(browser_command_line.HasSwitch(kRealBrowserCanvasSeedSwitch));
++    command_line->AppendSwitchASCII(
++        kRealBrowserCanvasSeedSwitch,
++        browser_command_line.GetSwitchValueASCII(kRealBrowserCanvasSeedSwitch));
+     content::RenderProcessHost* process =
+         content::RenderProcessHost::FromID(child_process_id);
+     if (process) {
+diff --git a/third_party/blink/renderer/core/html/canvas/html_canvas_element.cc b/third_party/blink/renderer/core/html/canvas/html_canvas_element.cc
+index 4c784e32..3f01de3b 100644
+--- a/third_party/blink/renderer/core/html/canvas/html_canvas_element.cc
++++ b/third_party/blink/renderer/core/html/canvas/html_canvas_element.cc
+@@ -116,6 +116,7 @@
+ #include "third_party/blink/renderer/platform/graphics/gpu/shared_gpu_context.h"
+ #include "third_party/blink/renderer/platform/graphics/graphics_context.h"
+ #include "third_party/blink/renderer/platform/graphics/image_data_buffer.h"
++#include "third_party/blink/renderer/platform/graphics/realbrowser_canvas_noise.h"
+ #include "third_party/blink/renderer/platform/graphics/memory_managed_paint_recorder.h"
+ #include "third_party/blink/renderer/platform/graphics/paint/paint_canvas.h"
+ #include "third_party/blink/renderer/platform/graphics/skia/skia_utils.h"
+@@ -1292,6 +1293,9 @@ String HTMLCanvasElement::ToDataURLInternal(
+ 
+   scoped_refptr<StaticBitmapImage> image_bitmap = Snapshot(source_buffer);
+   if (image_bitmap) {
++    if (IsRenderingContext2D()) {
++      image_bitmap = CopyWithRealBrowserCanvasNoise(std::move(image_bitmap));
++    }
+     std::unique_ptr<ImageDataBuffer> data_buffer =
+         ImageDataBuffer::Create(image_bitmap);
+     if (!data_buffer)
+@@ -1397,6 +1401,9 @@ void HTMLCanvasElement::toBlob(V8BlobCallback* callback,
+   CanvasAsyncBlobCreator* async_creator = nullptr;
+   scoped_refptr<StaticBitmapImage> image_bitmap = Snapshot(kBackBuffer);
+   if (image_bitmap) {
++    if (IsRenderingContext2D()) {
++      image_bitmap = CopyWithRealBrowserCanvasNoise(std::move(image_bitmap));
++    }
+     auto* options = ImageEncodeOptions::Create();
+     options->setType(ImageEncoderUtils::MimeTypeName(encoding_mime_type));
+     async_creator = MakeGarbageCollected<CanvasAsyncBlobCreator>(
+diff --git a/third_party/blink/renderer/core/offscreencanvas/offscreen_canvas.cc b/third_party/blink/renderer/core/offscreencanvas/offscreen_canvas.cc
+index 6cfcdef9..06c22f6c 100644
+--- a/third_party/blink/renderer/core/offscreencanvas/offscreen_canvas.cc
++++ b/third_party/blink/renderer/core/offscreencanvas/offscreen_canvas.cc
+@@ -46,6 +46,7 @@
+ #include "third_party/blink/renderer/platform/graphics/gpu/canvas_utils.h"
+ #include "third_party/blink/renderer/platform/graphics/gpu/shared_gpu_context.h"
+ #include "third_party/blink/renderer/platform/graphics/image.h"
++#include "third_party/blink/renderer/platform/graphics/realbrowser_canvas_noise.h"
+ #include "third_party/blink/renderer/platform/graphics/static_bitmap_image.h"
+ #include "third_party/blink/renderer/platform/graphics/static_bitmap_image_transform.h"
+ #include "third_party/blink/renderer/platform/graphics/unaccelerated_static_bitmap_image.h"
+@@ -475,6 +476,9 @@ ScriptPromise<Blob> OffscreenCanvas::convertToBlob(
+   base::TimeTicks start_time = base::TimeTicks::Now();
+   scoped_refptr<StaticBitmapImage> image_bitmap = context_->GetImage();
+   if (image_bitmap) {
++    if (context_->IsRenderingContext2D()) {
++      image_bitmap = CopyWithRealBrowserCanvasNoise(std::move(image_bitmap));
++    }
+     auto* resolver = MakeGarbageCollected<ScriptPromiseResolver<Blob>>(
+         script_state, exception_state.GetContext());
+     CanvasAsyncBlobCreator::ToBlobFunctionType function_type =
+diff --git a/third_party/blink/renderer/modules/canvas/canvas2d/base_rendering_context_2d.cc b/third_party/blink/renderer/modules/canvas/canvas2d/base_rendering_context_2d.cc
+index fd13b975..0ab9fcc6 100644
+--- a/third_party/blink/renderer/modules/canvas/canvas2d/base_rendering_context_2d.cc
++++ b/third_party/blink/renderer/modules/canvas/canvas2d/base_rendering_context_2d.cc
+@@ -83,6 +83,7 @@
+ #include "third_party/blink/renderer/platform/graphics/gpu/webgpu_mailbox_texture.h"
+ #include "third_party/blink/renderer/platform/graphics/image.h"
+ #include "third_party/blink/renderer/platform/graphics/image_data_buffer.h"
++#include "third_party/blink/renderer/platform/graphics/realbrowser_canvas_noise.h"
+ #include "third_party/blink/renderer/platform/graphics/paint/paint_image.h"
+ #include "third_party/blink/renderer/platform/graphics/skia/skia_utils.h"
+ #include "third_party/blink/renderer/platform/graphics/static_bitmap_image.h"
+@@ -498,6 +499,8 @@ ImageData* BaseRenderingContext2D::getImageDataInternal(
+       // If the readback area is completely out of bounds just return a zero
+       // initialized buffer. No point in trying to perform out of bounds read.
+       CHECK(validate_and_create_params.zero_initialize);
++      SkPixmap image_data_pixmap = image_data->GetSkPixmap();
++      ApplyRealBrowserCanvasNoise(image_data_pixmap);
+       return image_data;
+     }
+ 
+@@ -513,6 +516,9 @@ ImageData* BaseRenderingContext2D::getImageDataInternal(
+     }
+   }
+ 
++  SkPixmap image_data_pixmap = image_data->GetSkPixmap();
++  ApplyRealBrowserCanvasNoise(image_data_pixmap);
++
+   return image_data;
+ }
+ 
+diff --git a/third_party/blink/renderer/platform/BUILD.gn b/third_party/blink/renderer/platform/BUILD.gn
+index 85d03eee..e61036c4 100644
+--- a/third_party/blink/renderer/platform/BUILD.gn
++++ b/third_party/blink/renderer/platform/BUILD.gn
+@@ -1089,6 +1089,8 @@ component("platform") {
+     "graphics/image.h",
+     "graphics/image_data_buffer.cc",
+     "graphics/image_data_buffer.h",
++    "graphics/realbrowser_canvas_noise.cc",
++    "graphics/realbrowser_canvas_noise.h",
+     "graphics/image_decoder_wrapper.cc",
+     "graphics/image_decoder_wrapper.h",
+     "graphics/image_decoding_store.cc",
+diff --git a/third_party/blink/renderer/platform/graphics/realbrowser_canvas_noise.cc b/third_party/blink/renderer/platform/graphics/realbrowser_canvas_noise.cc
+new file mode 100644
+index 00000000..5f49415b
+--- /dev/null
++++ b/third_party/blink/renderer/platform/graphics/realbrowser_canvas_noise.cc
+@@ -0,0 +1,165 @@
++// Copyright 2026 The RealBrowser Authors
++// Use of this source code is governed by a BSD-style license that can be
++// found in the LICENSE file.
++
++#include "third_party/blink/renderer/platform/graphics/realbrowser_canvas_noise.h"
++
++#include <algorithm>
++#include <array>
++#include <cstddef>
++#include <cstdint>
++#include <optional>
++#include <string_view>
++
++#include "base/check.h"
++#include "base/command_line.h"
++#include "third_party/blink/renderer/platform/graphics/static_bitmap_image.h"
++#include "third_party/blink/renderer/platform/graphics/unaccelerated_static_bitmap_image.h"
++#include "third_party/skia/include/core/SkColorType.h"
++#include "third_party/skia/include/core/SkData.h"
++#include "third_party/skia/include/core/SkImage.h"
++#include "third_party/skia/include/core/SkImageInfo.h"
++#include "third_party/skia/include/core/SkPixmap.h"
++
++namespace blink {
++namespace {
++
++constexpr char kCanvasSeedSwitch[] = "realbrowser-canvas-seed";
++constexpr size_t kSeedBytes = 32;
++constexpr size_t kPerturbedPixels = 8;
++
++int HexDigit(char value) {
++  if (value >= '0' && value <= '9') {
++    return value - '0';
++  }
++  if (value >= 'a' && value <= 'f') {
++    return value - 'a' + 10;
++  }
++  if (value >= 'A' && value <= 'F') {
++    return value - 'A' + 10;
++  }
++  return -1;
++}
++
++std::optional<std::array<uint8_t, kSeedBytes>> ParseSeed(
++    std::string_view value) {
++  if (value.size() != kSeedBytes * 2) {
++    return std::nullopt;
++  }
++  std::array<uint8_t, kSeedBytes> seed{};
++  for (size_t index = 0; index < seed.size(); ++index) {
++    const int high = HexDigit(value[index * 2]);
++    const int low = HexDigit(value[index * 2 + 1]);
++    if (high < 0 || low < 0) {
++      return std::nullopt;
++    }
++    seed[index] = static_cast<uint8_t>((high << 4) | low);
++  }
++  return seed;
++}
++
++const std::optional<std::array<uint8_t, kSeedBytes>>& CanvasSeed() {
++  static const std::optional<std::array<uint8_t, kSeedBytes>> seed = [] {
++    const base::CommandLine& command_line =
++        *base::CommandLine::ForCurrentProcess();
++    if (!command_line.HasSwitch(kCanvasSeedSwitch)) {
++      return std::optional<std::array<uint8_t, kSeedBytes>>();
++    }
++    auto parsed = ParseSeed(
++        command_line.GetSwitchValueASCII(kCanvasSeedSwitch));
++    CHECK(parsed.has_value());
++    return parsed;
++  }();
++  return seed;
++}
++
++uint64_t Mix(uint64_t value) {
++  value += 0x9e3779b97f4a7c15ULL;
++  value = (value ^ (value >> 30)) * 0xbf58476d1ce4e5b9ULL;
++  value = (value ^ (value >> 27)) * 0x94d049bb133111ebULL;
++  return value ^ (value >> 31);
++}
++
++uint64_t SeedState(const std::array<uint8_t, kSeedBytes>& seed,
++                   int width,
++                   int height) {
++  uint64_t state = 0x7265616c62726f77ULL;
++  for (uint8_t byte : seed) {
++    state = Mix(state ^ byte);
++  }
++  return Mix(state ^ (static_cast<uint64_t>(width) << 32) ^
++             static_cast<uint32_t>(height));
++}
++
++}  // namespace
++
++void ApplyRealBrowserCanvasNoise(SkPixmap& pixmap) {
++  const auto& seed = CanvasSeed();
++  if (!seed.has_value() || pixmap.width() <= 0 || pixmap.height() <= 0 ||
++      pixmap.addr() == nullptr || pixmap.writable_addr() == nullptr) {
++    return;
++  }
++  if (pixmap.colorType() != kRGBA_8888_SkColorType &&
++      pixmap.colorType() != kBGRA_8888_SkColorType) {
++    return;
++  }
++
++  const size_t pixel_count =
++      static_cast<size_t>(pixmap.width()) * pixmap.height();
++  const size_t perturbation_count =
++      std::min(kPerturbedPixels, pixel_count);
++  std::array<size_t, kPerturbedPixels> used{};
++  uint64_t state = SeedState(*seed, pixmap.width(), pixmap.height());
++
++  for (size_t sample = 0; sample < perturbation_count; ++sample) {
++    state = Mix(state ^ sample);
++    size_t pixel_index = state % pixel_count;
++    while (std::find(used.begin(), used.begin() + sample, pixel_index) !=
++           used.begin() + sample) {
++      pixel_index = (pixel_index + 1) % pixel_count;
++    }
++    used[sample] = pixel_index;
++    const int x = static_cast<int>(pixel_index % pixmap.width());
++    const int y = static_cast<int>(pixel_index / pixmap.width());
++    auto* pixel = static_cast<uint8_t*>(pixmap.writable_addr(x, y));
++    const size_t channel = Mix(state ^ 0x63616e766173ULL) % 3;
++    pixel[channel] ^= 1;
++  }
++}
++
++scoped_refptr<StaticBitmapImage> CopyWithRealBrowserCanvasNoise(
++    scoped_refptr<StaticBitmapImage> image) {
++  if (!image || !CanvasSeed().has_value()) {
++    return image;
++  }
++  PaintImage paint_image = image->PaintImageForCurrentFrame();
++  if (!paint_image || paint_image.IsPaintWorklet()) {
++    return image;
++  }
++  const SkImageInfo source_info = paint_image.GetSkImageInfo();
++  if (source_info.isEmpty()) {
++    return image;
++  }
++  const SkImageInfo copy_info =
++      SkImageInfo::Make(source_info.width(), source_info.height(),
++                        kRGBA_8888_SkColorType, kUnpremul_SkAlphaType,
++                        source_info.refColorSpace());
++  const size_t row_bytes = copy_info.minRowBytes();
++  const size_t byte_size = copy_info.computeByteSize(row_bytes);
++  if (SkImageInfo::ByteSizeOverflowed(byte_size)) {
++    return image;
++  }
++  sk_sp<SkData> data = SkData::MakeUninitialized(byte_size);
++  SkPixmap pixmap(copy_info, data->writable_data(), row_bytes);
++  if (!paint_image.readPixels(copy_info, pixmap.writable_addr(), row_bytes, 0,
++                              0)) {
++    return image;
++  }
++  ApplyRealBrowserCanvasNoise(pixmap);
++  sk_sp<SkImage> copy =
++      SkImages::RasterFromData(copy_info, std::move(data), row_bytes);
++  return copy ? UnacceleratedStaticBitmapImage::Create(std::move(copy))
++              : image;
++}
++
++}  // namespace blink
+diff --git a/third_party/blink/renderer/platform/graphics/realbrowser_canvas_noise.h b/third_party/blink/renderer/platform/graphics/realbrowser_canvas_noise.h
+new file mode 100644
+index 00000000..8612424f
+--- /dev/null
++++ b/third_party/blink/renderer/platform/graphics/realbrowser_canvas_noise.h
+@@ -0,0 +1,28 @@
++// Copyright 2026 The RealBrowser Authors
++// Use of this source code is governed by a BSD-style license that can be
++// found in the LICENSE file.
++
++#ifndef THIRD_PARTY_BLINK_RENDERER_PLATFORM_GRAPHICS_REALBROWSER_CANVAS_NOISE_H_
++#define THIRD_PARTY_BLINK_RENDERER_PLATFORM_GRAPHICS_REALBROWSER_CANVAS_NOISE_H_
++
++#include "base/memory/scoped_refptr.h"
++#include "third_party/blink/renderer/platform/platform_export.h"
++
++class SkPixmap;
++
++namespace blink {
++
++class StaticBitmapImage;
++
++// Applies K1 noise only to caller-owned readback storage. The source canvas
++// and its backing resource are never mutated.
++PLATFORM_EXPORT void ApplyRealBrowserCanvasNoise(SkPixmap& pixmap);
++
++// Returns a readback copy with K1 noise, or the original image when the
++// internal renderer seed is absent (for non-product Blink test processes).
++PLATFORM_EXPORT scoped_refptr<StaticBitmapImage>
++CopyWithRealBrowserCanvasNoise(scoped_refptr<StaticBitmapImage> image);
++
++}  // namespace blink
++
++#endif  // THIRD_PARTY_BLINK_RENDERER_PLATFORM_GRAPHICS_REALBROWSER_CANVAS_NOISE_H_

@@ -1,0 +1,12 @@
+{
+  "name": "realbrowser-workspace",
+  "version": "0.0.0",
+  "private": true,
+  "packageManager": "pnpm@11.20.0",
+  "scripts": {
+    "dev": "pnpm --filter @realbrowser/desktop dev",
+    "build": "pnpm --filter @realbrowser/desktop build",
+    "check": "pnpm --filter @realbrowser/desktop check",
+    "tauri": "pnpm --filter @realbrowser/desktop tauri"
+  }
+}

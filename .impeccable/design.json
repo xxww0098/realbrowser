@@ -1,0 +1,89 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-08-15T05:51:12Z",
+  "title": "Design System: RealBrowser",
+  "extensions": {
+    "colorMeta": {
+      "primary": { "role": "primary", "displayName": "Operator Blue", "canonical": "#2855ff", "tonalRamp": ["#0d1d57", "#142a80", "#1b39aa", "#2248d4", "#2855ff", "#6581ff", "#a2aeff", "#e2e7ff"] },
+      "primary-soft": { "role": "primary", "displayName": "Blue Wash", "canonical": "#edf1ff", "tonalRamp": ["#172052", "#26306d", "#3d4a89", "#6470a6", "#929ac3", "#bbc1dd", "#dce0ef", "#f2f4ff"] },
+      "canvas": { "role": "neutral", "displayName": "Clear Canvas", "canonical": "#ffffff", "tonalRamp": ["#262626", "#444444", "#666666", "#888888", "#aaaaaa", "#cccccc", "#e8e8e8", "#ffffff"] },
+      "ink": { "role": "neutral", "displayName": "Deep Ink", "canonical": "#11182c", "tonalRamp": ["#090d18", "#11182c", "#273049", "#48516b", "#70788e", "#9ca2b2", "#c9ccd5", "#f0f1f4"] },
+      "quiet-surface": { "role": "neutral", "displayName": "Warm Quiet Surface", "canonical": "#f7f7f5", "tonalRamp": ["#292927", "#4a4a46", "#6b6b66", "#8e8e87", "#b0b0a9", "#d0d0cb", "#e8e8e4", "#f7f7f5"] },
+      "quiet-text": { "role": "neutral", "displayName": "Quiet Text", "canonical": "#6e768c", "tonalRamp": ["#161a25", "#2b3141", "#444b5e", "#5d6579", "#7b8294", "#9da2b0", "#c3c6ce", "#eceef1"] },
+      "hairline": { "role": "neutral", "displayName": "Warm Hairline", "canonical": "#e8e8e4", "tonalRamp": ["#292927", "#494945", "#696964", "#898983", "#aaa9a3", "#c9c9c4", "#e1e1dc", "#f5f5f2"] },
+      "strong-line": { "role": "neutral", "displayName": "Strong Line", "canonical": "#d5d5cf", "tonalRamp": ["#292925", "#484842", "#686861", "#87877f", "#a7a79f", "#c5c5be", "#ddddda", "#f4f4f2"] }
+    },
+    "typographyMeta": {
+      "headline": { "displayName": "Workspace Headline", "purpose": "Primary desktop workspace title." },
+      "title": { "displayName": "Overlay Title", "purpose": "Dialog and drawer titles." },
+      "body": { "displayName": "Operational Body", "purpose": "Metadata, values, and short messages." },
+      "label": { "displayName": "Control Label", "purpose": "Buttons, fields, table headers, and badges." }
+    },
+    "shadows": [
+      { "name": "primary-lift", "value": "0 8px 18px -9px rgba(40,85,255,.78)", "purpose": "Primary actions only." },
+      { "name": "surface-ambient", "value": "0 14px 42px -36px rgba(42,42,38,.34)", "purpose": "Large bordered table surface." },
+      { "name": "drawer-separation", "value": "-24px 0 70px -38px rgba(42,42,38,.34)", "purpose": "Temporary right drawer." }
+    ],
+    "motion": [
+      { "name": "state-fast", "value": "150ms ease", "purpose": "Hover, focus, color, and small transform changes." }
+    ],
+    "breakpoints": [
+      { "name": "desktop-min", "value": "960px" },
+      { "name": "compact-table", "value": "1120px" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "The single primary action in a local task area.",
+      "html": "<button class=\"ds-btn-primary\">新建环境</button>",
+      "css": ".ds-btn-primary{height:44px;padding:0 20px;border:0;border-radius:14px;background:#2855ff;color:#fff;font:600 14px -apple-system,BlinkMacSystemFont,Segoe UI,sans-serif;box-shadow:0 8px 18px -9px rgba(40,85,255,.78);transition:background-color 150ms ease,box-shadow 150ms ease,transform 150ms ease}.ds-btn-primary:hover{background:#224de8}.ds-btn-primary:focus-visible{outline:3px solid rgba(40,85,255,.22);outline-offset:2px}.ds-btn-primary:active{transform:translateY(1px)}"
+    },
+    {
+      "name": "Outline Button",
+      "kind": "button",
+      "refersTo": "button-outline",
+      "description": "Secondary actions that remain visibly bounded.",
+      "html": "<button class=\"ds-btn-outline\">刷新</button>",
+      "css": ".ds-btn-outline{height:44px;padding:0 20px;border:1px solid #d5d5cf;border-radius:14px;background:#fff;color:#11182c;font:600 14px -apple-system,BlinkMacSystemFont,Segoe UI,sans-serif;transition:background-color 150ms ease,border-color 150ms ease,color 150ms ease}.ds-btn-outline:hover{border-color:rgba(40,85,255,.55);background:#edf1ff;color:#2855ff}.ds-btn-outline:focus-visible{outline:3px solid rgba(40,85,255,.18);outline-offset:2px}"
+    },
+    {
+      "name": "Search Input",
+      "kind": "input",
+      "refersTo": "input",
+      "description": "Wide operational search with a strong but soft outline.",
+      "html": "<input class=\"ds-input\" placeholder=\"搜索名称、编号或网址\">",
+      "css": ".ds-input{width:360px;height:48px;padding:0 16px;border:1px solid #d5d5cf;border-radius:14px;background:#fff;color:#11182c;font:400 15px -apple-system,BlinkMacSystemFont,Segoe UI,sans-serif;outline:none;box-shadow:0 1px 2px rgba(16,24,40,.02);transition:border-color 150ms ease,box-shadow 150ms ease}.ds-input::placeholder{color:#a7aec0}.ds-input:focus{border-color:#2855ff;box-shadow:0 0 0 3px rgba(40,85,255,.10)}"
+    },
+    {
+      "name": "Environment Table",
+      "kind": "card",
+      "refersTo": "table-container",
+      "description": "The primary workspace surface for dense identity operations.",
+      "html": "<div class=\"ds-table\"><div class=\"ds-table-head\">环境名称&nbsp;&nbsp;&nbsp; Persona&nbsp;&nbsp;&nbsp; 网络出口</div><div class=\"ds-table-row\"><strong>欧洲站 · 客服</strong><span>原生 · 直连</span></div></div>",
+      "css": ".ds-table{width:440px;overflow:hidden;border:1px solid #e8e8e4;border-radius:19px;background:#fff;color:#11182c;font:400 14px -apple-system,BlinkMacSystemFont,Segoe UI,sans-serif;box-shadow:0 14px 42px -36px rgba(42,42,38,.34)}.ds-table-head{padding:14px 18px;background:#fafaf8;color:#6e768c;font-size:12px;font-weight:600}.ds-table-row{display:flex;justify-content:space-between;padding:18px;border-top:1px solid #e8e8e4}.ds-table-row:hover{background:#f7f9ff}.ds-table-row span{color:#6e768c}"
+    },
+    {
+      "name": "Capability Badge",
+      "kind": "chip",
+      "refersTo": "capability-badge",
+      "description": "Compact truth label for Persona execution coverage.",
+      "html": "<span class=\"ds-capability\">启动映射</span>",
+      "css": ".ds-capability{display:inline-block;padding:3px 7px;border:1px solid rgba(40,85,255,.18);border-radius:999px;background:#edf1ff;color:#2855ff;font:650 10px -apple-system,BlinkMacSystemFont,Segoe UI,sans-serif;line-height:1}.ds-capability:hover{background:#e2e8ff}.ds-capability:focus-visible{outline:2px solid rgba(40,85,255,.22);outline-offset:2px}"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Quiet Operator",
+    "overview": "RealBrowser feels like a calm commercial operations console: dense enough for repeated store work, quiet enough that environment state and the next valid action remain obvious. The visual system borrows the familiar rhythm of browser-profile managers while keeping its own restrained, local-first character. The main workspace is continuous and table-led. Warm hairlines, white surfaces, deep ink, and a single royal-blue action color create structure without hard boxes or decorative copy. Context appears in dialogs and temporary drawers, never in a persistent second content pane.",
+    "keyCharacteristics": ["One compact icon rail and one continuous work surface.", "Soft corners with fine, warm-gray separators.", "Royal blue reserved for selection and primary actions.", "Short Chinese labels, operational states, and no marketing prose in workflows."],
+    "rules": [
+      { "name": "The One Accent Rule", "body": "Operator Blue is the only chromatic interaction accent; semantic green, amber, and red remain status-only.", "section": "colors" },
+      { "name": "The Short Label Rule", "body": "Operational controls use the shortest unambiguous Chinese label; helper prose appears only when an error or empty state needs it.", "section": "typography" },
+      { "name": "The Earned Elevation Rule", "body": "A shadow means an element is floating or immediately actionable; ordinary containers stay border-defined.", "section": "elevation" }
+    ],
+    "dos": ["Do keep environment management table-first and action-forward.", "Do use dialogs and temporary drawers for editing without changing the workspace composition.", "Do show backend capability beside every Persona field.", "Do keep borders fine, warm, and consistent across nested surfaces."],
+    "donts": ["Don't introduce a persistent left-right content split.", "Don't add verbose onboarding or promotional paragraphs to operational screens.", "Don't expose controls for fingerprint behavior the runtime cannot execute and observe.", "Don't use sharp corners, heavy outlines, gradients, or indiscriminate pill containers."]
+  }
+}

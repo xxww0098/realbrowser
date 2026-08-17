@@ -1,0 +1,53 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 860 256" width="100%" height="100%" shape-rendering="geometricPrecision">
+  <defs>
+    <linearGradient id="br_stem" x1="72" y1="153" x2="164" y2="464" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#1B78FE"/>
+      <stop offset="45%" stop-color="#0A5FFB"/>
+      <stop offset="100%" stop-color="#0550F6"/>
+    </linearGradient>
+    <linearGradient id="br_roof_l" x1="72" y1="153" x2="262" y2="48" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#2A82FD"/>
+      <stop offset="100%" stop-color="#4B9AFD"/>
+    </linearGradient>
+    <linearGradient id="br_roof_r" x1="256" y1="48" x2="436" y2="153" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#6BB0FE"/>
+      <stop offset="55%" stop-color="#4DA0FD"/>
+      <stop offset="100%" stop-color="#2F86FC"/>
+    </linearGradient>
+    <linearGradient id="br_bowl" x1="348" y1="153" x2="436" y2="263" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#4CA0FE"/>
+      <stop offset="100%" stop-color="#2B84FD"/>
+    </linearGradient>
+    <linearGradient id="br_fold" x1="348" y1="258" x2="322" y2="328" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#1A72FC"/>
+      <stop offset="100%" stop-color="#0A48D6"/>
+    </linearGradient>
+    <linearGradient id="br_waist" x1="230" y1="241" x2="348" y2="328" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#1A78FE"/>
+      <stop offset="100%" stop-color="#0A5AF4"/>
+    </linearGradient>
+    <linearGradient id="br_leg" x1="230" y1="328" x2="440" y2="451" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#0E64FB"/>
+      <stop offset="100%" stop-color="#044AEF"/>
+    </linearGradient>
+    <linearGradient id="text_grad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#0F172A"/>
+      <stop offset="100%" stop-color="#1E293B"/>
+    </linearGradient>
+  </defs>
+
+  <g transform="translate(8, 12) scale(0.45)">
+    <polygon points="262.57,48 435.54,153.09 433.35,262.57 321.68,328.25 439.92,407.07 358.91,450.86 229.73,376.42 229.73,271.33 286.65,240.67 347.96,258.19 347.96,203.45 256,146.53 164.04,203.45 164.04,411.45 80.84,464 72.08,459.62 72.08,153.09" fill="#0A5FFB"/>
+    <polygon points="72.08,153.09 164.04,203.45 164.04,411.45 80.84,464 72.08,459.62" fill="url(#br_stem)"/>
+    <polygon points="72.08,153.09 262.57,48 256,146.53 164.04,203.45" fill="url(#br_roof_l)"/>
+    <polygon points="262.57,48 435.54,153.09 347.96,203.45 256,146.53" fill="url(#br_roof_r)"/>
+    <polygon points="435.54,153.09 433.35,262.57 347.96,258.19 347.96,203.45" fill="url(#br_bowl)"/>
+    <polygon points="433.35,262.57 321.68,328.25 347.96,258.19" fill="url(#br_fold)"/>
+    <polygon points="286.65,240.67 347.96,258.19 321.68,328.25 229.73,271.33" fill="url(#br_waist)"/>
+    <polygon points="229.73,271.33 321.68,328.25 229.73,376.42" fill="url(#br_leg)"/>
+    <polygon points="321.68,328.25 439.92,407.07 358.91,450.86 229.73,376.42" fill="url(#br_leg)"/>
+  </g>
+
+  <text x="280" y="142" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif" font-weight="800" font-size="78" letter-spacing="-1.5" fill="url(#text_grad)">Real<tspan fill="#0052FF">Browser</tspan></text>
+  <text x="284" y="186" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-weight="500" font-size="22" letter-spacing="3" fill="#64748B">Local-First Multi-Identity Engine</text>
+</svg>

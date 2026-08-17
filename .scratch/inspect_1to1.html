@@ -1,0 +1,961 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <title>1:1 SVG 复刻精确对比验证</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: #F8FAFC;
+      color: #0F172A;
+      margin: 0;
+      padding: 30px;
+    }
+    .header {
+      max-width: 1000px;
+      margin: 0 auto 30px;
+    }
+    .title {
+      font-size: 24px;
+      font-weight: bold;
+    }
+    .subtitle {
+      color: #64748B;
+      font-size: 14px;
+      margin-top: 4px;
+    }
+    .comparison-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+      max-width: 1000px;
+      margin: 0 auto 40px;
+    }
+    .card {
+      background: #FFFFFF;
+      border: 1px solid #E2E8F0;
+      border-radius: 16px;
+      padding: 24px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.04);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .card h3 {
+      margin: 0 0 16px;
+      font-size: 16px;
+      color: #334155;
+    }
+    .img-box {
+      width: 280px;
+      height: 280px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 1px dashed #CBD5E1;
+      border-radius: 12px;
+      background: #FFFFFF;
+      overflow: hidden;
+    }
+    .img-box img, .img-box svg {
+      width: 85%;
+      height: 85%;
+      object-fit: contain;
+    }
+    .sizes-row {
+      display: flex;
+      gap: 24px;
+      align-items: center;
+      justify-content: center;
+      margin-top: 30px;
+      padding-top: 20px;
+      border-top: 1px solid #E2E8F0;
+      width: 100%;
+    }
+    .size-box {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+      color: #64748B;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div class="title">RealBrowser 1:1 SVG 复刻对比</div>
+    <div class="subtitle">线条干净平直 · 渐变多面光泽 · 纯白背景 · 像素级几何拟合</div>
+  </div>
+
+  <div class="comparison-grid">
+    <!-- Original Reference -->
+    <div class="card">
+      <h3>原图参考（Original PNG）</h3>
+      <div class="img-box">
+        <img src="data:image/png;base64,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" alt="Original" />
+      </div>
+    </div>
+
+    <!-- 1:1 SVG Recreation -->
+    <div class="card">
+      <h3>1:1 SVG 矢量复刻（Vector SVG）</h3>
+      <div class="img-box">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%" shape-rendering="geometricPrecision">
+
+  <defs>
+    <!-- Facet Gradients matching the reference image's luminous glossy sheen -->
+    
+    <!-- 1. Left Top Shoulder / Chamfer -->
+    <linearGradient id="g_shoulder_left" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#3B8EFF" />
+      <stop offset="100%" stop-color="#1472FF" />
+    </linearGradient>
+
+    <!-- 2. Left Stem Upper -->
+    <linearGradient id="g_stem_upper" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1675FF" />
+      <stop offset="100%" stop-color="#005BFF" />
+    </linearGradient>
+
+    <!-- 3. Left Stem Main Lower & Bottom Cut -->
+    <linearGradient id="g_stem_lower" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#005BFF" />
+      <stop offset="60%" stop-color="#004FE8" />
+      <stop offset="100%" stop-color="#0044D4" />
+    </linearGradient>
+
+    <!-- 4. Top Roof Left Slope -->
+    <linearGradient id="g_roof_left" x1="0%" y1="100%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#3C90FF" />
+      <stop offset="100%" stop-color="#60A8FF" />
+    </linearGradient>
+
+    <!-- 5. Top Roof Peak Highlight (Luminous Diamond) -->
+    <linearGradient id="g_roof_peak" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#82C2FF" />
+      <stop offset="50%" stop-color="#64B0FF" />
+      <stop offset="100%" stop-color="#3B92FF" />
+    </linearGradient>
+
+    <!-- 6. Top Roof Right Slope & Upper Right Shoulder -->
+    <linearGradient id="g_roof_right" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#4B9AFF" />
+      <stop offset="100%" stop-color="#1E78FF" />
+    </linearGradient>
+
+    <!-- 7. Upper Bowl Outer Right Panel -->
+    <linearGradient id="g_bowl_outer" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#2D82FF" />
+      <stop offset="100%" stop-color="#1067F5" />
+    </linearGradient>
+
+    <!-- 8. Upper Bowl Inner Return to Waist -->
+    <linearGradient id="g_bowl_return" x1="100%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#1A72FF" />
+      <stop offset="100%" stop-color="#0A52E2" />
+    </linearGradient>
+
+    <!-- 9. Waist Central Bridge -->
+    <linearGradient id="g_waist" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0E5BF0" />
+      <stop offset="100%" stop-color="#0742C7" />
+    </linearGradient>
+
+    <!-- 10. Leg Upper Origami Light Surface (Glossy Highlight) -->
+    <linearGradient id="g_leg_light" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#5CAEFF" />
+      <stop offset="50%" stop-color="#2D85FF" />
+      <stop offset="100%" stop-color="#0E67FF" />
+    </linearGradient>
+
+    <!-- 11. Leg Tip Edge -->
+    <linearGradient id="g_leg_tip" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0E67FF" />
+      <stop offset="100%" stop-color="#004CE0" />
+    </linearGradient>
+
+    <!-- 12. Leg 3D Shadow Underside (Deep Royal Cobalt) -->
+    <linearGradient id="g_leg_shadow" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0B4CD9" />
+      <stop offset="50%" stop-color="#0537B0" />
+      <stop offset="100%" stop-color="#02278C" />
+    </linearGradient>
+
+    <!-- 13. Leg Lower Panel Return -->
+    <linearGradient id="g_leg_lower_panel" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1058E8" />
+      <stop offset="100%" stop-color="#083EBE" />
+    </linearGradient>
+
+    <!-- Clean Vector Drop Shadow for Glossy Float -->
+    <filter id="clean_soft_shadow" x="-15%" y="-15%" width="130%" height="130%">
+      <feDropShadow dx="0" dy="6" stdDeviation="10" flood-color="#004AD9" flood-opacity="0.18" />
+    </filter>
+  </defs>
+
+  <!-- Clean Pure White Canvas -->
+  <rect width="512" height="512" fill="#FFFFFF" rx="0" />
+  
+  <g id="realbrowser-mark-1to1" filter="url(#clean_soft_shadow)">
+
+    <!-- 1. Left Stem Top Shoulder Facet -->
+    <polygon points="49.6,172.4 152.8,112.2 144.2,228.3 49.6,275.6" fill="url(#g_shoulder_left)" />
+
+    <!-- 2. Left Stem Upper Segment -->
+    <polygon points="49.6,275.6 144.2,228.3 144.2,275.6 49.6,378.8" fill="url(#g_stem_upper)" />
+
+    <!-- 3. Left Stem Lower Segment & Bottom Chamfer -->
+    <polygon points="49.6,378.8 144.2,275.6 144.2,461.4 49.6,516.4" fill="url(#g_stem_lower)" />
+
+    <!-- 4. Top Roof Left Slope -->
+    <polygon points="49.6,172.4 256.0,52.0 256.0,163.8 152.8,112.2" fill="url(#g_roof_left)" />
+
+    <!-- 5. Top Roof Peak Highlight (Diamond Facet) -->
+    <polygon points="256.0,52.0 462.4,172.4 367.8,228.3 256.0,163.8" fill="url(#g_roof_peak)" />
+
+    <!-- 6. Upper Bowl Outer Right Panel -->
+    <polygon points="462.4,172.4 462.4,292.8 367.8,292.8 367.8,228.3" fill="url(#g_bowl_outer)" />
+
+    <!-- 7. Upper Bowl Return to Waist -->
+    <polygon points="367.8,228.3 367.8,292.8 256.0,327.2 256.0,275.6" fill="url(#g_bowl_return)" />
+
+    <!-- 8. Central Waist / Bridge -->
+    <polygon points="144.2,275.6 256.0,275.6 256.0,327.2 144.2,327.2" fill="url(#g_waist)" />
+
+    <!-- 9. Leg Upper Light Surface (Glossy Origami Ridge) -->
+    <polygon points="256.0,327.2 367.8,292.8 462.4,445.9 324.8,387.4" fill="url(#g_leg_light)" />
+
+    <!-- 10. Leg Tip Edge -->
+    <polygon points="462.4,445.9 462.4,469.1 406.5,500.9 324.8,387.4" fill="url(#g_leg_tip)" />
+
+    <!-- 11. Leg 3D Shadow Underside (Deep Fold) -->
+    <polygon points="144.2,327.2 256.0,327.2 324.8,387.4 208.7,404.6" fill="url(#g_leg_shadow)" />
+
+    <!-- 12. Leg Lower Flange Return -->
+    <polygon points="208.7,404.6 324.8,387.4 406.5,500.9 307.6,461.4" fill="url(#g_leg_lower_panel)" />
+
+  </g>
+</svg>
+
+      </div>
+    </div>
+  </div>
+
+  <div class="card" style="max-width: 1000px; margin: 0 auto;">
+    <h3>多尺寸缩放渲染清晰度 (Multi-scale Preview)</h3>
+    <div class="sizes-row">
+      <div class="size-box">
+        <div style="width: 128px; height: 128px; background: white; border: 1px solid #E2E8F0; border-radius: 8px; display: flex; align-items: center; justify-content: center;">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="110" height="110" shape-rendering="geometricPrecision">
+
+  <defs>
+    <!-- Facet Gradients matching the reference image's luminous glossy sheen -->
+    
+    <!-- 1. Left Top Shoulder / Chamfer -->
+    <linearGradient id="g_shoulder_left" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#3B8EFF" />
+      <stop offset="100%" stop-color="#1472FF" />
+    </linearGradient>
+
+    <!-- 2. Left Stem Upper -->
+    <linearGradient id="g_stem_upper" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1675FF" />
+      <stop offset="100%" stop-color="#005BFF" />
+    </linearGradient>
+
+    <!-- 3. Left Stem Main Lower & Bottom Cut -->
+    <linearGradient id="g_stem_lower" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#005BFF" />
+      <stop offset="60%" stop-color="#004FE8" />
+      <stop offset="100%" stop-color="#0044D4" />
+    </linearGradient>
+
+    <!-- 4. Top Roof Left Slope -->
+    <linearGradient id="g_roof_left" x1="0%" y1="100%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#3C90FF" />
+      <stop offset="100%" stop-color="#60A8FF" />
+    </linearGradient>
+
+    <!-- 5. Top Roof Peak Highlight (Luminous Diamond) -->
+    <linearGradient id="g_roof_peak" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#82C2FF" />
+      <stop offset="50%" stop-color="#64B0FF" />
+      <stop offset="100%" stop-color="#3B92FF" />
+    </linearGradient>
+
+    <!-- 6. Top Roof Right Slope & Upper Right Shoulder -->
+    <linearGradient id="g_roof_right" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#4B9AFF" />
+      <stop offset="100%" stop-color="#1E78FF" />
+    </linearGradient>
+
+    <!-- 7. Upper Bowl Outer Right Panel -->
+    <linearGradient id="g_bowl_outer" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#2D82FF" />
+      <stop offset="100%" stop-color="#1067F5" />
+    </linearGradient>
+
+    <!-- 8. Upper Bowl Inner Return to Waist -->
+    <linearGradient id="g_bowl_return" x1="100%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#1A72FF" />
+      <stop offset="100%" stop-color="#0A52E2" />
+    </linearGradient>
+
+    <!-- 9. Waist Central Bridge -->
+    <linearGradient id="g_waist" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0E5BF0" />
+      <stop offset="100%" stop-color="#0742C7" />
+    </linearGradient>
+
+    <!-- 10. Leg Upper Origami Light Surface (Glossy Highlight) -->
+    <linearGradient id="g_leg_light" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#5CAEFF" />
+      <stop offset="50%" stop-color="#2D85FF" />
+      <stop offset="100%" stop-color="#0E67FF" />
+    </linearGradient>
+
+    <!-- 11. Leg Tip Edge -->
+    <linearGradient id="g_leg_tip" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0E67FF" />
+      <stop offset="100%" stop-color="#004CE0" />
+    </linearGradient>
+
+    <!-- 12. Leg 3D Shadow Underside (Deep Royal Cobalt) -->
+    <linearGradient id="g_leg_shadow" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0B4CD9" />
+      <stop offset="50%" stop-color="#0537B0" />
+      <stop offset="100%" stop-color="#02278C" />
+    </linearGradient>
+
+    <!-- 13. Leg Lower Panel Return -->
+    <linearGradient id="g_leg_lower_panel" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1058E8" />
+      <stop offset="100%" stop-color="#083EBE" />
+    </linearGradient>
+
+    <!-- Clean Vector Drop Shadow for Glossy Float -->
+    <filter id="clean_soft_shadow" x="-15%" y="-15%" width="130%" height="130%">
+      <feDropShadow dx="0" dy="6" stdDeviation="10" flood-color="#004AD9" flood-opacity="0.18" />
+    </filter>
+  </defs>
+
+  <!-- Clean Pure White Canvas -->
+  <rect width="512" height="512" fill="#FFFFFF" rx="0" />
+  
+  <g id="realbrowser-mark-1to1" filter="url(#clean_soft_shadow)">
+
+    <!-- 1. Left Stem Top Shoulder Facet -->
+    <polygon points="49.6,172.4 152.8,112.2 144.2,228.3 49.6,275.6" fill="url(#g_shoulder_left)" />
+
+    <!-- 2. Left Stem Upper Segment -->
+    <polygon points="49.6,275.6 144.2,228.3 144.2,275.6 49.6,378.8" fill="url(#g_stem_upper)" />
+
+    <!-- 3. Left Stem Lower Segment & Bottom Chamfer -->
+    <polygon points="49.6,378.8 144.2,275.6 144.2,461.4 49.6,516.4" fill="url(#g_stem_lower)" />
+
+    <!-- 4. Top Roof Left Slope -->
+    <polygon points="49.6,172.4 256.0,52.0 256.0,163.8 152.8,112.2" fill="url(#g_roof_left)" />
+
+    <!-- 5. Top Roof Peak Highlight (Diamond Facet) -->
+    <polygon points="256.0,52.0 462.4,172.4 367.8,228.3 256.0,163.8" fill="url(#g_roof_peak)" />
+
+    <!-- 6. Upper Bowl Outer Right Panel -->
+    <polygon points="462.4,172.4 462.4,292.8 367.8,292.8 367.8,228.3" fill="url(#g_bowl_outer)" />
+
+    <!-- 7. Upper Bowl Return to Waist -->
+    <polygon points="367.8,228.3 367.8,292.8 256.0,327.2 256.0,275.6" fill="url(#g_bowl_return)" />
+
+    <!-- 8. Central Waist / Bridge -->
+    <polygon points="144.2,275.6 256.0,275.6 256.0,327.2 144.2,327.2" fill="url(#g_waist)" />
+
+    <!-- 9. Leg Upper Light Surface (Glossy Origami Ridge) -->
+    <polygon points="256.0,327.2 367.8,292.8 462.4,445.9 324.8,387.4" fill="url(#g_leg_light)" />
+
+    <!-- 10. Leg Tip Edge -->
+    <polygon points="462.4,445.9 462.4,469.1 406.5,500.9 324.8,387.4" fill="url(#g_leg_tip)" />
+
+    <!-- 11. Leg 3D Shadow Underside (Deep Fold) -->
+    <polygon points="144.2,327.2 256.0,327.2 324.8,387.4 208.7,404.6" fill="url(#g_leg_shadow)" />
+
+    <!-- 12. Leg Lower Flange Return -->
+    <polygon points="208.7,404.6 324.8,387.4 406.5,500.9 307.6,461.4" fill="url(#g_leg_lower_panel)" />
+
+  </g>
+</svg>
+
+        </div>
+        <span>128px</span>
+      </div>
+      <div class="size-box">
+        <div style="width: 64px; height: 64px; background: white; border: 1px solid #E2E8F0; border-radius: 6px; display: flex; align-items: center; justify-content: center;">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="56" height="56" shape-rendering="geometricPrecision">
+
+  <defs>
+    <!-- Facet Gradients matching the reference image's luminous glossy sheen -->
+    
+    <!-- 1. Left Top Shoulder / Chamfer -->
+    <linearGradient id="g_shoulder_left" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#3B8EFF" />
+      <stop offset="100%" stop-color="#1472FF" />
+    </linearGradient>
+
+    <!-- 2. Left Stem Upper -->
+    <linearGradient id="g_stem_upper" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1675FF" />
+      <stop offset="100%" stop-color="#005BFF" />
+    </linearGradient>
+
+    <!-- 3. Left Stem Main Lower & Bottom Cut -->
+    <linearGradient id="g_stem_lower" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#005BFF" />
+      <stop offset="60%" stop-color="#004FE8" />
+      <stop offset="100%" stop-color="#0044D4" />
+    </linearGradient>
+
+    <!-- 4. Top Roof Left Slope -->
+    <linearGradient id="g_roof_left" x1="0%" y1="100%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#3C90FF" />
+      <stop offset="100%" stop-color="#60A8FF" />
+    </linearGradient>
+
+    <!-- 5. Top Roof Peak Highlight (Luminous Diamond) -->
+    <linearGradient id="g_roof_peak" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#82C2FF" />
+      <stop offset="50%" stop-color="#64B0FF" />
+      <stop offset="100%" stop-color="#3B92FF" />
+    </linearGradient>
+
+    <!-- 6. Top Roof Right Slope & Upper Right Shoulder -->
+    <linearGradient id="g_roof_right" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#4B9AFF" />
+      <stop offset="100%" stop-color="#1E78FF" />
+    </linearGradient>
+
+    <!-- 7. Upper Bowl Outer Right Panel -->
+    <linearGradient id="g_bowl_outer" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#2D82FF" />
+      <stop offset="100%" stop-color="#1067F5" />
+    </linearGradient>
+
+    <!-- 8. Upper Bowl Inner Return to Waist -->
+    <linearGradient id="g_bowl_return" x1="100%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#1A72FF" />
+      <stop offset="100%" stop-color="#0A52E2" />
+    </linearGradient>
+
+    <!-- 9. Waist Central Bridge -->
+    <linearGradient id="g_waist" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0E5BF0" />
+      <stop offset="100%" stop-color="#0742C7" />
+    </linearGradient>
+
+    <!-- 10. Leg Upper Origami Light Surface (Glossy Highlight) -->
+    <linearGradient id="g_leg_light" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#5CAEFF" />
+      <stop offset="50%" stop-color="#2D85FF" />
+      <stop offset="100%" stop-color="#0E67FF" />
+    </linearGradient>
+
+    <!-- 11. Leg Tip Edge -->
+    <linearGradient id="g_leg_tip" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0E67FF" />
+      <stop offset="100%" stop-color="#004CE0" />
+    </linearGradient>
+
+    <!-- 12. Leg 3D Shadow Underside (Deep Royal Cobalt) -->
+    <linearGradient id="g_leg_shadow" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0B4CD9" />
+      <stop offset="50%" stop-color="#0537B0" />
+      <stop offset="100%" stop-color="#02278C" />
+    </linearGradient>
+
+    <!-- 13. Leg Lower Panel Return -->
+    <linearGradient id="g_leg_lower_panel" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1058E8" />
+      <stop offset="100%" stop-color="#083EBE" />
+    </linearGradient>
+
+    <!-- Clean Vector Drop Shadow for Glossy Float -->
+    <filter id="clean_soft_shadow" x="-15%" y="-15%" width="130%" height="130%">
+      <feDropShadow dx="0" dy="6" stdDeviation="10" flood-color="#004AD9" flood-opacity="0.18" />
+    </filter>
+  </defs>
+
+  <!-- Clean Pure White Canvas -->
+  <rect width="512" height="512" fill="#FFFFFF" rx="0" />
+  
+  <g id="realbrowser-mark-1to1" filter="url(#clean_soft_shadow)">
+
+    <!-- 1. Left Stem Top Shoulder Facet -->
+    <polygon points="49.6,172.4 152.8,112.2 144.2,228.3 49.6,275.6" fill="url(#g_shoulder_left)" />
+
+    <!-- 2. Left Stem Upper Segment -->
+    <polygon points="49.6,275.6 144.2,228.3 144.2,275.6 49.6,378.8" fill="url(#g_stem_upper)" />
+
+    <!-- 3. Left Stem Lower Segment & Bottom Chamfer -->
+    <polygon points="49.6,378.8 144.2,275.6 144.2,461.4 49.6,516.4" fill="url(#g_stem_lower)" />
+
+    <!-- 4. Top Roof Left Slope -->
+    <polygon points="49.6,172.4 256.0,52.0 256.0,163.8 152.8,112.2" fill="url(#g_roof_left)" />
+
+    <!-- 5. Top Roof Peak Highlight (Diamond Facet) -->
+    <polygon points="256.0,52.0 462.4,172.4 367.8,228.3 256.0,163.8" fill="url(#g_roof_peak)" />
+
+    <!-- 6. Upper Bowl Outer Right Panel -->
+    <polygon points="462.4,172.4 462.4,292.8 367.8,292.8 367.8,228.3" fill="url(#g_bowl_outer)" />
+
+    <!-- 7. Upper Bowl Return to Waist -->
+    <polygon points="367.8,228.3 367.8,292.8 256.0,327.2 256.0,275.6" fill="url(#g_bowl_return)" />
+
+    <!-- 8. Central Waist / Bridge -->
+    <polygon points="144.2,275.6 256.0,275.6 256.0,327.2 144.2,327.2" fill="url(#g_waist)" />
+
+    <!-- 9. Leg Upper Light Surface (Glossy Origami Ridge) -->
+    <polygon points="256.0,327.2 367.8,292.8 462.4,445.9 324.8,387.4" fill="url(#g_leg_light)" />
+
+    <!-- 10. Leg Tip Edge -->
+    <polygon points="462.4,445.9 462.4,469.1 406.5,500.9 324.8,387.4" fill="url(#g_leg_tip)" />
+
+    <!-- 11. Leg 3D Shadow Underside (Deep Fold) -->
+    <polygon points="144.2,327.2 256.0,327.2 324.8,387.4 208.7,404.6" fill="url(#g_leg_shadow)" />
+
+    <!-- 12. Leg Lower Flange Return -->
+    <polygon points="208.7,404.6 324.8,387.4 406.5,500.9 307.6,461.4" fill="url(#g_leg_lower_panel)" />
+
+  </g>
+</svg>
+
+        </div>
+        <span>64px</span>
+      </div>
+      <div class="size-box">
+        <div style="width: 32px; height: 32px; background: white; border: 1px solid #E2E8F0; border-radius: 4px; display: flex; align-items: center; justify-content: center;">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="28" height="28" shape-rendering="geometricPrecision">
+
+  <defs>
+    <!-- Facet Gradients matching the reference image's luminous glossy sheen -->
+    
+    <!-- 1. Left Top Shoulder / Chamfer -->
+    <linearGradient id="g_shoulder_left" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#3B8EFF" />
+      <stop offset="100%" stop-color="#1472FF" />
+    </linearGradient>
+
+    <!-- 2. Left Stem Upper -->
+    <linearGradient id="g_stem_upper" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1675FF" />
+      <stop offset="100%" stop-color="#005BFF" />
+    </linearGradient>
+
+    <!-- 3. Left Stem Main Lower & Bottom Cut -->
+    <linearGradient id="g_stem_lower" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#005BFF" />
+      <stop offset="60%" stop-color="#004FE8" />
+      <stop offset="100%" stop-color="#0044D4" />
+    </linearGradient>
+
+    <!-- 4. Top Roof Left Slope -->
+    <linearGradient id="g_roof_left" x1="0%" y1="100%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#3C90FF" />
+      <stop offset="100%" stop-color="#60A8FF" />
+    </linearGradient>
+
+    <!-- 5. Top Roof Peak Highlight (Luminous Diamond) -->
+    <linearGradient id="g_roof_peak" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#82C2FF" />
+      <stop offset="50%" stop-color="#64B0FF" />
+      <stop offset="100%" stop-color="#3B92FF" />
+    </linearGradient>
+
+    <!-- 6. Top Roof Right Slope & Upper Right Shoulder -->
+    <linearGradient id="g_roof_right" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#4B9AFF" />
+      <stop offset="100%" stop-color="#1E78FF" />
+    </linearGradient>
+
+    <!-- 7. Upper Bowl Outer Right Panel -->
+    <linearGradient id="g_bowl_outer" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#2D82FF" />
+      <stop offset="100%" stop-color="#1067F5" />
+    </linearGradient>
+
+    <!-- 8. Upper Bowl Inner Return to Waist -->
+    <linearGradient id="g_bowl_return" x1="100%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#1A72FF" />
+      <stop offset="100%" stop-color="#0A52E2" />
+    </linearGradient>
+
+    <!-- 9. Waist Central Bridge -->
+    <linearGradient id="g_waist" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0E5BF0" />
+      <stop offset="100%" stop-color="#0742C7" />
+    </linearGradient>
+
+    <!-- 10. Leg Upper Origami Light Surface (Glossy Highlight) -->
+    <linearGradient id="g_leg_light" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#5CAEFF" />
+      <stop offset="50%" stop-color="#2D85FF" />
+      <stop offset="100%" stop-color="#0E67FF" />
+    </linearGradient>
+
+    <!-- 11. Leg Tip Edge -->
+    <linearGradient id="g_leg_tip" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0E67FF" />
+      <stop offset="100%" stop-color="#004CE0" />
+    </linearGradient>
+
+    <!-- 12. Leg 3D Shadow Underside (Deep Royal Cobalt) -->
+    <linearGradient id="g_leg_shadow" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0B4CD9" />
+      <stop offset="50%" stop-color="#0537B0" />
+      <stop offset="100%" stop-color="#02278C" />
+    </linearGradient>
+
+    <!-- 13. Leg Lower Panel Return -->
+    <linearGradient id="g_leg_lower_panel" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1058E8" />
+      <stop offset="100%" stop-color="#083EBE" />
+    </linearGradient>
+
+    <!-- Clean Vector Drop Shadow for Glossy Float -->
+    <filter id="clean_soft_shadow" x="-15%" y="-15%" width="130%" height="130%">
+      <feDropShadow dx="0" dy="6" stdDeviation="10" flood-color="#004AD9" flood-opacity="0.18" />
+    </filter>
+  </defs>
+
+  <!-- Clean Pure White Canvas -->
+  <rect width="512" height="512" fill="#FFFFFF" rx="0" />
+  
+  <g id="realbrowser-mark-1to1" filter="url(#clean_soft_shadow)">
+
+    <!-- 1. Left Stem Top Shoulder Facet -->
+    <polygon points="49.6,172.4 152.8,112.2 144.2,228.3 49.6,275.6" fill="url(#g_shoulder_left)" />
+
+    <!-- 2. Left Stem Upper Segment -->
+    <polygon points="49.6,275.6 144.2,228.3 144.2,275.6 49.6,378.8" fill="url(#g_stem_upper)" />
+
+    <!-- 3. Left Stem Lower Segment & Bottom Chamfer -->
+    <polygon points="49.6,378.8 144.2,275.6 144.2,461.4 49.6,516.4" fill="url(#g_stem_lower)" />
+
+    <!-- 4. Top Roof Left Slope -->
+    <polygon points="49.6,172.4 256.0,52.0 256.0,163.8 152.8,112.2" fill="url(#g_roof_left)" />
+
+    <!-- 5. Top Roof Peak Highlight (Diamond Facet) -->
+    <polygon points="256.0,52.0 462.4,172.4 367.8,228.3 256.0,163.8" fill="url(#g_roof_peak)" />
+
+    <!-- 6. Upper Bowl Outer Right Panel -->
+    <polygon points="462.4,172.4 462.4,292.8 367.8,292.8 367.8,228.3" fill="url(#g_bowl_outer)" />
+
+    <!-- 7. Upper Bowl Return to Waist -->
+    <polygon points="367.8,228.3 367.8,292.8 256.0,327.2 256.0,275.6" fill="url(#g_bowl_return)" />
+
+    <!-- 8. Central Waist / Bridge -->
+    <polygon points="144.2,275.6 256.0,275.6 256.0,327.2 144.2,327.2" fill="url(#g_waist)" />
+
+    <!-- 9. Leg Upper Light Surface (Glossy Origami Ridge) -->
+    <polygon points="256.0,327.2 367.8,292.8 462.4,445.9 324.8,387.4" fill="url(#g_leg_light)" />
+
+    <!-- 10. Leg Tip Edge -->
+    <polygon points="462.4,445.9 462.4,469.1 406.5,500.9 324.8,387.4" fill="url(#g_leg_tip)" />
+
+    <!-- 11. Leg 3D Shadow Underside (Deep Fold) -->
+    <polygon points="144.2,327.2 256.0,327.2 324.8,387.4 208.7,404.6" fill="url(#g_leg_shadow)" />
+
+    <!-- 12. Leg Lower Flange Return -->
+    <polygon points="208.7,404.6 324.8,387.4 406.5,500.9 307.6,461.4" fill="url(#g_leg_lower_panel)" />
+
+  </g>
+</svg>
+
+        </div>
+        <span>32px</span>
+      </div>
+      <div class="size-box">
+        <div style="width: 24px; height: 24px; background: white; border: 1px solid #E2E8F0; border-radius: 4px; display: flex; align-items: center; justify-content: center;">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="20" height="20" shape-rendering="geometricPrecision">
+
+  <defs>
+    <!-- Facet Gradients matching the reference image's luminous glossy sheen -->
+    
+    <!-- 1. Left Top Shoulder / Chamfer -->
+    <linearGradient id="g_shoulder_left" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#3B8EFF" />
+      <stop offset="100%" stop-color="#1472FF" />
+    </linearGradient>
+
+    <!-- 2. Left Stem Upper -->
+    <linearGradient id="g_stem_upper" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1675FF" />
+      <stop offset="100%" stop-color="#005BFF" />
+    </linearGradient>
+
+    <!-- 3. Left Stem Main Lower & Bottom Cut -->
+    <linearGradient id="g_stem_lower" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#005BFF" />
+      <stop offset="60%" stop-color="#004FE8" />
+      <stop offset="100%" stop-color="#0044D4" />
+    </linearGradient>
+
+    <!-- 4. Top Roof Left Slope -->
+    <linearGradient id="g_roof_left" x1="0%" y1="100%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#3C90FF" />
+      <stop offset="100%" stop-color="#60A8FF" />
+    </linearGradient>
+
+    <!-- 5. Top Roof Peak Highlight (Luminous Diamond) -->
+    <linearGradient id="g_roof_peak" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#82C2FF" />
+      <stop offset="50%" stop-color="#64B0FF" />
+      <stop offset="100%" stop-color="#3B92FF" />
+    </linearGradient>
+
+    <!-- 6. Top Roof Right Slope & Upper Right Shoulder -->
+    <linearGradient id="g_roof_right" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#4B9AFF" />
+      <stop offset="100%" stop-color="#1E78FF" />
+    </linearGradient>
+
+    <!-- 7. Upper Bowl Outer Right Panel -->
+    <linearGradient id="g_bowl_outer" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#2D82FF" />
+      <stop offset="100%" stop-color="#1067F5" />
+    </linearGradient>
+
+    <!-- 8. Upper Bowl Inner Return to Waist -->
+    <linearGradient id="g_bowl_return" x1="100%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#1A72FF" />
+      <stop offset="100%" stop-color="#0A52E2" />
+    </linearGradient>
+
+    <!-- 9. Waist Central Bridge -->
+    <linearGradient id="g_waist" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0E5BF0" />
+      <stop offset="100%" stop-color="#0742C7" />
+    </linearGradient>
+
+    <!-- 10. Leg Upper Origami Light Surface (Glossy Highlight) -->
+    <linearGradient id="g_leg_light" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#5CAEFF" />
+      <stop offset="50%" stop-color="#2D85FF" />
+      <stop offset="100%" stop-color="#0E67FF" />
+    </linearGradient>
+
+    <!-- 11. Leg Tip Edge -->
+    <linearGradient id="g_leg_tip" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0E67FF" />
+      <stop offset="100%" stop-color="#004CE0" />
+    </linearGradient>
+
+    <!-- 12. Leg 3D Shadow Underside (Deep Royal Cobalt) -->
+    <linearGradient id="g_leg_shadow" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0B4CD9" />
+      <stop offset="50%" stop-color="#0537B0" />
+      <stop offset="100%" stop-color="#02278C" />
+    </linearGradient>
+
+    <!-- 13. Leg Lower Panel Return -->
+    <linearGradient id="g_leg_lower_panel" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1058E8" />
+      <stop offset="100%" stop-color="#083EBE" />
+    </linearGradient>
+
+    <!-- Clean Vector Drop Shadow for Glossy Float -->
+    <filter id="clean_soft_shadow" x="-15%" y="-15%" width="130%" height="130%">
+      <feDropShadow dx="0" dy="6" stdDeviation="10" flood-color="#004AD9" flood-opacity="0.18" />
+    </filter>
+  </defs>
+
+  <!-- Clean Pure White Canvas -->
+  <rect width="512" height="512" fill="#FFFFFF" rx="0" />
+  
+  <g id="realbrowser-mark-1to1" filter="url(#clean_soft_shadow)">
+
+    <!-- 1. Left Stem Top Shoulder Facet -->
+    <polygon points="49.6,172.4 152.8,112.2 144.2,228.3 49.6,275.6" fill="url(#g_shoulder_left)" />
+
+    <!-- 2. Left Stem Upper Segment -->
+    <polygon points="49.6,275.6 144.2,228.3 144.2,275.6 49.6,378.8" fill="url(#g_stem_upper)" />
+
+    <!-- 3. Left Stem Lower Segment & Bottom Chamfer -->
+    <polygon points="49.6,378.8 144.2,275.6 144.2,461.4 49.6,516.4" fill="url(#g_stem_lower)" />
+
+    <!-- 4. Top Roof Left Slope -->
+    <polygon points="49.6,172.4 256.0,52.0 256.0,163.8 152.8,112.2" fill="url(#g_roof_left)" />
+
+    <!-- 5. Top Roof Peak Highlight (Diamond Facet) -->
+    <polygon points="256.0,52.0 462.4,172.4 367.8,228.3 256.0,163.8" fill="url(#g_roof_peak)" />
+
+    <!-- 6. Upper Bowl Outer Right Panel -->
+    <polygon points="462.4,172.4 462.4,292.8 367.8,292.8 367.8,228.3" fill="url(#g_bowl_outer)" />
+
+    <!-- 7. Upper Bowl Return to Waist -->
+    <polygon points="367.8,228.3 367.8,292.8 256.0,327.2 256.0,275.6" fill="url(#g_bowl_return)" />
+
+    <!-- 8. Central Waist / Bridge -->
+    <polygon points="144.2,275.6 256.0,275.6 256.0,327.2 144.2,327.2" fill="url(#g_waist)" />
+
+    <!-- 9. Leg Upper Light Surface (Glossy Origami Ridge) -->
+    <polygon points="256.0,327.2 367.8,292.8 462.4,445.9 324.8,387.4" fill="url(#g_leg_light)" />
+
+    <!-- 10. Leg Tip Edge -->
+    <polygon points="462.4,445.9 462.4,469.1 406.5,500.9 324.8,387.4" fill="url(#g_leg_tip)" />
+
+    <!-- 11. Leg 3D Shadow Underside (Deep Fold) -->
+    <polygon points="144.2,327.2 256.0,327.2 324.8,387.4 208.7,404.6" fill="url(#g_leg_shadow)" />
+
+    <!-- 12. Leg Lower Flange Return -->
+    <polygon points="208.7,404.6 324.8,387.4 406.5,500.9 307.6,461.4" fill="url(#g_leg_lower_panel)" />
+
+  </g>
+</svg>
+
+        </div>
+        <span>24px</span>
+      </div>
+      <div class="size-box">
+        <div style="width: 16px; height: 16px; background: white; border: 1px solid #E2E8F0; border-radius: 3px; display: flex; align-items: center; justify-content: center;">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="14" height="14" shape-rendering="geometricPrecision">
+
+  <defs>
+    <!-- Facet Gradients matching the reference image's luminous glossy sheen -->
+    
+    <!-- 1. Left Top Shoulder / Chamfer -->
+    <linearGradient id="g_shoulder_left" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#3B8EFF" />
+      <stop offset="100%" stop-color="#1472FF" />
+    </linearGradient>
+
+    <!-- 2. Left Stem Upper -->
+    <linearGradient id="g_stem_upper" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1675FF" />
+      <stop offset="100%" stop-color="#005BFF" />
+    </linearGradient>
+
+    <!-- 3. Left Stem Main Lower & Bottom Cut -->
+    <linearGradient id="g_stem_lower" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#005BFF" />
+      <stop offset="60%" stop-color="#004FE8" />
+      <stop offset="100%" stop-color="#0044D4" />
+    </linearGradient>
+
+    <!-- 4. Top Roof Left Slope -->
+    <linearGradient id="g_roof_left" x1="0%" y1="100%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#3C90FF" />
+      <stop offset="100%" stop-color="#60A8FF" />
+    </linearGradient>
+
+    <!-- 5. Top Roof Peak Highlight (Luminous Diamond) -->
+    <linearGradient id="g_roof_peak" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#82C2FF" />
+      <stop offset="50%" stop-color="#64B0FF" />
+      <stop offset="100%" stop-color="#3B92FF" />
+    </linearGradient>
+
+    <!-- 6. Top Roof Right Slope & Upper Right Shoulder -->
+    <linearGradient id="g_roof_right" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#4B9AFF" />
+      <stop offset="100%" stop-color="#1E78FF" />
+    </linearGradient>
+
+    <!-- 7. Upper Bowl Outer Right Panel -->
+    <linearGradient id="g_bowl_outer" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#2D82FF" />
+      <stop offset="100%" stop-color="#1067F5" />
+    </linearGradient>
+
+    <!-- 8. Upper Bowl Inner Return to Waist -->
+    <linearGradient id="g_bowl_return" x1="100%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#1A72FF" />
+      <stop offset="100%" stop-color="#0A52E2" />
+    </linearGradient>
+
+    <!-- 9. Waist Central Bridge -->
+    <linearGradient id="g_waist" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0E5BF0" />
+      <stop offset="100%" stop-color="#0742C7" />
+    </linearGradient>
+
+    <!-- 10. Leg Upper Origami Light Surface (Glossy Highlight) -->
+    <linearGradient id="g_leg_light" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#5CAEFF" />
+      <stop offset="50%" stop-color="#2D85FF" />
+      <stop offset="100%" stop-color="#0E67FF" />
+    </linearGradient>
+
+    <!-- 11. Leg Tip Edge -->
+    <linearGradient id="g_leg_tip" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0E67FF" />
+      <stop offset="100%" stop-color="#004CE0" />
+    </linearGradient>
+
+    <!-- 12. Leg 3D Shadow Underside (Deep Royal Cobalt) -->
+    <linearGradient id="g_leg_shadow" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0B4CD9" />
+      <stop offset="50%" stop-color="#0537B0" />
+      <stop offset="100%" stop-color="#02278C" />
+    </linearGradient>
+
+    <!-- 13. Leg Lower Panel Return -->
+    <linearGradient id="g_leg_lower_panel" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1058E8" />
+      <stop offset="100%" stop-color="#083EBE" />
+    </linearGradient>
+
+    <!-- Clean Vector Drop Shadow for Glossy Float -->
+    <filter id="clean_soft_shadow" x="-15%" y="-15%" width="130%" height="130%">
+      <feDropShadow dx="0" dy="6" stdDeviation="10" flood-color="#004AD9" flood-opacity="0.18" />
+    </filter>
+  </defs>
+
+  <!-- Clean Pure White Canvas -->
+  <rect width="512" height="512" fill="#FFFFFF" rx="0" />
+  
+  <g id="realbrowser-mark-1to1" filter="url(#clean_soft_shadow)">
+
+    <!-- 1. Left Stem Top Shoulder Facet -->
+    <polygon points="49.6,172.4 152.8,112.2 144.2,228.3 49.6,275.6" fill="url(#g_shoulder_left)" />
+
+    <!-- 2. Left Stem Upper Segment -->
+    <polygon points="49.6,275.6 144.2,228.3 144.2,275.6 49.6,378.8" fill="url(#g_stem_upper)" />
+
+    <!-- 3. Left Stem Lower Segment & Bottom Chamfer -->
+    <polygon points="49.6,378.8 144.2,275.6 144.2,461.4 49.6,516.4" fill="url(#g_stem_lower)" />
+
+    <!-- 4. Top Roof Left Slope -->
+    <polygon points="49.6,172.4 256.0,52.0 256.0,163.8 152.8,112.2" fill="url(#g_roof_left)" />
+
+    <!-- 5. Top Roof Peak Highlight (Diamond Facet) -->
+    <polygon points="256.0,52.0 462.4,172.4 367.8,228.3 256.0,163.8" fill="url(#g_roof_peak)" />
+
+    <!-- 6. Upper Bowl Outer Right Panel -->
+    <polygon points="462.4,172.4 462.4,292.8 367.8,292.8 367.8,228.3" fill="url(#g_bowl_outer)" />
+
+    <!-- 7. Upper Bowl Return to Waist -->
+    <polygon points="367.8,228.3 367.8,292.8 256.0,327.2 256.0,275.6" fill="url(#g_bowl_return)" />
+
+    <!-- 8. Central Waist / Bridge -->
+    <polygon points="144.2,275.6 256.0,275.6 256.0,327.2 144.2,327.2" fill="url(#g_waist)" />
+
+    <!-- 9. Leg Upper Light Surface (Glossy Origami Ridge) -->
+    <polygon points="256.0,327.2 367.8,292.8 462.4,445.9 324.8,387.4" fill="url(#g_leg_light)" />
+
+    <!-- 10. Leg Tip Edge -->
+    <polygon points="462.4,445.9 462.4,469.1 406.5,500.9 324.8,387.4" fill="url(#g_leg_tip)" />
+
+    <!-- 11. Leg 3D Shadow Underside (Deep Fold) -->
+    <polygon points="144.2,327.2 256.0,327.2 324.8,387.4 208.7,404.6" fill="url(#g_leg_shadow)" />
+
+    <!-- 12. Leg Lower Flange Return -->
+    <polygon points="208.7,404.6 324.8,387.4 406.5,500.9 307.6,461.4" fill="url(#g_leg_lower_panel)" />
+
+  </g>
+</svg>
+
+        </div>
+        <span>16px</span>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

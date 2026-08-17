@@ -1,0 +1,20 @@
+{
+  "approved": true,
+  "approval": "Delegated by the user's request to design and begin building, then corrected by the explicit AdsPower reference.",
+  "mode": "Operate",
+  "viewport": {
+    "width": 1440,
+    "height": 960
+  },
+  "sourceReferences": [
+    "https://help.adspower.com/docs/opening_closing_browser_profiles",
+    "https://www.adspower.com/release/2026-08-week-1",
+    "https://help.adspower.com/docs/creating_browser_profiles"
+  ],
+  "translationNotes": [
+    "Keep the narrow icon rail, large title, wide search, action hierarchy, airy table rows, and vivid royal-blue primary actions.",
+    "Keep one continuous main content column; dialogs and temporary side drawers are allowed, persistent left-right content splits are not.",
+    "Do not copy AdsPower branding, logos, proprietary browser names, or features RealBrowser has not implemented.",
+    "Platform logos and store names in the generated comp are illustrative only and must not ship in the local-first empty state."
+  ]
+}

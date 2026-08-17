@@ -1,0 +1,8 @@
+/target/
+/node_modules/
+/apps/desktop/node_modules/
+/apps/desktop/dist/
+/.dev/
+/.impeccable/review/*.png
+.DS_Store
+*.log
