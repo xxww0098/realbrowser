@@ -234,7 +234,7 @@ new file mode 100644
 index 00000000..5f49415b
 --- /dev/null
 +++ b/third_party/blink/renderer/platform/graphics/realbrowser_canvas_noise.cc
-@@ -0,0 +1,165 @@
+@@ -0,0 +1,168 @@
 +// Copyright 2026 The RealBrowser Authors
 +// Use of this source code is governed by a BSD-style license that can be
 +// found in the LICENSE file.
@@ -250,6 +250,8 @@ index 00000000..5f49415b
 +
 +#include "base/check.h"
 +#include "base/command_line.h"
++#include "base/compiler_specific.h"
++#include "base/containers/span.h"
 +#include "third_party/blink/renderer/platform/graphics/static_bitmap_image.h"
 +#include "third_party/blink/renderer/platform/graphics/unaccelerated_static_bitmap_image.h"
 +#include "third_party/skia/include/core/SkColorType.h"
@@ -358,7 +360,8 @@ index 00000000..5f49415b
 +    used[sample] = pixel_index;
 +    const int x = static_cast<int>(pixel_index % pixmap.width());
 +    const int y = static_cast<int>(pixel_index / pixmap.width());
-+    auto* pixel = static_cast<uint8_t*>(pixmap.writable_addr(x, y));
++    auto pixel = UNSAFE_BUFFERS(base::span(
++        static_cast<uint8_t*>(pixmap.writable_addr(x, y)), size_t{4}));
 +    const size_t channel = Mix(state ^ 0x63616e766173ULL) % 3;
 +    pixel[channel] ^= 1;
 +  }
