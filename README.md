@@ -67,6 +67,8 @@ pnpm --filter @realbrowser/desktop tauri build --debug --bundles app
 
 `cargo xtask ci` runs workspace structure checks, formatting, Clippy with warnings denied, Rust tests, TypeScript checks, React/Vitest interaction tests, and the production frontend build.
 
+Cursor Cloud on Ubuntu is this hermetic lane: `pnpm install --frozen-lockfile` then `cargo xtask ci`. Native macOS UI, the product kernel, and ignored kernel-launching tests stay on a Mac; see the Cursor Cloud section in [`AGENTS.md`](AGENTS.md).
+
 The native macOS acceptance tests are intentionally ignored by hermetic CI because they launch the packaged RealBrowser product Chromium:
 
 ```bash

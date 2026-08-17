@@ -74,3 +74,14 @@ UI acceptance is complete only when the real Tauri window exposes the expected s
 - Sequencing and readiness evidence: `.scratch/fingerprint-browser/implementation/minimum-runnable-plan.md`
 
 One meaning has one home. Link to it instead of copying it into a second document.
+
+## Cursor Cloud specific instructions
+
+Cloud agents run Ubuntu. That is the hermetic engineering lane, not a macOS or Windows native host.
+
+- Cloud lane: from the project root, run `pnpm install --frozen-lockfile`, then `cargo xtask ci`.
+- Native macOS UI, `./dev.sh`, the product Chromium kernel, Computer Use, and ignored tests that launch the kernel stay on a Mac.
+- Capability labels must describe what the runtime actually applies and observes. Never present planned, partial, or page-only coverage as applied browser-wide. Do not project `graphics.canvas` as `CustomKernel` without a passing product runtime.
+
+Do not start MR-1 tickets from a cloud agent. Linux `cargo xtask ci` is not native UI or product-kernel proof.
+

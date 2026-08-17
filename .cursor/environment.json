@@ -1,0 +1,14 @@
+{
+  "name": "RealBrowser cloud engineering lane",
+  "build": {
+    "dockerfile": "Dockerfile",
+    "context": ".."
+  },
+  "install": "corepack enable && corepack prepare pnpm@11.20.0 --activate && pnpm install --frozen-lockfile && rustup show && cargo fetch",
+  "ports": [
+    {
+      "name": "frontend Vite",
+      "port": 1431
+    }
+  ]
+}
