@@ -83,6 +83,9 @@ esac
 python3 -c 'import sys; raise SystemExit(sys.version_info < (3, 10))' \
   || die "Chromium requires Python 3.10 or newer"
 
+run_as_root apt-get update
+run_as_root apt-get install -y lsb-release curl python3 git file ca-certificates
+
 if [[ ! -x "$DEPOT_TOOLS/gclient" ]]; then
   git clone --depth=1 "$DEPOT_TOOLS_GIT_URL" "$DEPOT_TOOLS"
 fi
