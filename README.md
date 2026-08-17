@@ -41,6 +41,8 @@ tools/build-realbrowser-chromium-macos.sh
 
 Offline archive mode still requires the exact pinned Chromium commit, rejects sparse source, validates every host executable as macOS-native, and validates the installed Clang/Rust revisions before building. It is not a Stock Chrome or incomplete-source fallback.
 
+A Linux host may compile the same pinned Chromium + K0+K1 patch with `tools/build-realbrowser-chromium-linux.sh`. That output is a compile-only engineering artifact, not the macOS or Windows product kernel; keep using `tools/build-realbrowser-chromium-macos.sh` for the macOS product kernel. The Linux lane clones `depot_tools` when missing, syncs official Chromium src to tag `151.0.7922.138` (`41fa82442390a4d4456c78f2d69a832d5720cb27`), and packages under `.dev/kernel`. It aborts before `gclient sync` or ninja when free disk is under 80 GiB or RAM is under 8 GiB. Default checkout paths match the macOS lane (`$ROOT/../../BUILD/realbrowser-chromium/src`, `$ROOT/../depot_tools`) and fall back to gitignored `$ROOT/.dev/chromium/src` and `$ROOT/.dev/depot_tools` when those parents are not writable. Override with `REALBROWSER_CHROMIUM_SRC` and `DEPOT_TOOLS`.
+
 Port `1431` is used by the frontend development server. Direct frontend-only work can use `pnpm --filter @realbrowser/desktop dev`; use `./dev.sh` for the real Tauri shell.
 
 On macOS, `./dev.sh` preserves Vite HMR and the Tauri Rust watcher while wrapping each rebuilt executable in `.dev/macos/RealBrowser Dev.app`. The development-only bundle id is `com.realbrowser.desktop.tauri.dev`, and its local state is isolated under `.dev/data` rather than the release application data directory.
@@ -67,7 +69,7 @@ pnpm --filter @realbrowser/desktop tauri build --debug --bundles app
 
 `cargo xtask ci` runs workspace structure checks, formatting, Clippy with warnings denied, Rust tests, TypeScript checks, React/Vitest interaction tests, and the production frontend build.
 
-Cursor Cloud on Ubuntu is this hermetic lane: `pnpm install --frozen-lockfile` then `cargo xtask ci`. Native macOS UI, the product kernel, and ignored kernel-launching tests stay on a Mac; see the Cursor Cloud section in [`AGENTS.md`](AGENTS.md).
+Cursor Cloud on Ubuntu is this hermetic lane: `pnpm install --frozen-lockfile` then `cargo xtask ci`. It may also run `tools/build-realbrowser-chromium-linux.sh` as compile-only evidence of the pinned Chromium + K0+K1 patch. That Linux binary is not the macOS product kernel. Native macOS UI, `./dev.sh`, Computer Use, and ignored kernel-launching tests stay on a Mac; see the Cursor Cloud section in [`AGENTS.md`](AGENTS.md).
 
 The native macOS acceptance tests are intentionally ignored by hermetic CI because they launch the packaged RealBrowser product Chromium:
 

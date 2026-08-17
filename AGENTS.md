@@ -80,8 +80,9 @@ One meaning has one home. Link to it instead of copying it into a second documen
 Cloud agents run Ubuntu. That is the hermetic engineering lane, not a macOS or Windows native host.
 
 - Cloud lane: from the project root, run `pnpm install --frozen-lockfile`, then `cargo xtask ci`.
-- Native macOS UI, `./dev.sh`, the product Chromium kernel, Computer Use, and ignored tests that launch the kernel stay on a Mac.
+- Ubuntu may attempt the Linux Chromium compile lane (`tools/build-realbrowser-chromium-linux.sh`) when free disk is at least 80 GiB and RAM is at least 8 GiB. Abort before `gclient sync` or ninja when either floor is missed. The Linux binary is compile-only; it is not macOS product-kernel proof, and `graphics.canvas` must not be projected as `CustomKernel` from it.
+- Native macOS UI, `./dev.sh`, the macOS product Chromium kernel (`tools/build-realbrowser-chromium-macos.sh`), Computer Use, and ignored tests that launch the kernel stay on a Mac.
 - Capability labels must describe what the runtime actually applies and observes. Never present planned, partial, or page-only coverage as applied browser-wide. Do not project `graphics.canvas` as `CustomKernel` without a passing product runtime.
 
-Do not start MR-1 tickets from a cloud agent. Linux `cargo xtask ci` is not native UI or product-kernel proof.
+Do not start MR-1 tickets from a cloud agent. Linux `cargo xtask ci` is not native UI or product-kernel proof. A Linux RealBrowser Chromium compile is not the macOS product kernel.
 
