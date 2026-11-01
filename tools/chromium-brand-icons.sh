@@ -9,17 +9,17 @@ fi
 repo_root="$(cd "$(dirname "$0")/.." && pwd)"
 chromium_root="$1"
 theme_root="$chromium_root/chrome/app/theme/chromium"
-source_png="$repo_root/apps/desktop/src-tauri/icons/app-icon-1024.png"
+source_png="$repo_root/apps/desktop/icons/app-icon-1024.png"
 
 test -f "$chromium_root/DEPS"
 test -d "$theme_root"
 test -f "$source_png"
 
-cp "$repo_root/apps/desktop/src-tauri/icons/icon.icns" \
+cp "$repo_root/apps/desktop/icons/icon.icns" \
   "$theme_root/mac/app.icns"
-cp "$repo_root/apps/desktop/src-tauri/icons/icon.ico" \
+cp "$repo_root/apps/desktop/icons/icon.ico" \
   "$theme_root/win/chromium.ico"
-cp "$repo_root/apps/desktop/src/assets/logo-brand.svg" \
+cp "$repo_root/apps/desktop/assets/logo-brand.svg" \
   "$theme_root/product_logo.svg"
 
 for size in 16 24 48 64 128 256; do

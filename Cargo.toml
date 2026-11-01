@@ -1,6 +1,6 @@
 [workspace]
 members = [
-  "apps/desktop/src-tauri",
+  "apps/desktop",
   "crates/browser-control",
   "crates/browser-core",
   "crates/browser-network",
@@ -12,7 +12,7 @@ members = [
   "tools/xtask",
 ]
 default-members = [
-  "apps/desktop/src-tauri",
+  "apps/desktop",
   "crates/browser-control",
   "crates/browser-core",
   "crates/browser-network",
@@ -50,8 +50,6 @@ serde = { version = "1.0.229", default-features = false }
 serde_json = "1.0.151"
 sha2 = "0.10.9"
 sysinfo = { version = "0.39.6", default-features = false, features = ["system"] }
-tauri = { version = "=2.11.5", default-features = false, features = ["wry"] }
-tauri-build = "2.6.3"
 tempfile = "3.27.0"
 thiserror = "2.0.20"
 toml_edit = "0.25.13"
@@ -60,6 +58,7 @@ tracing-subscriber = { version = "0.3.23", default-features = false }
 tungstenite = { version = "0.30.0", default-features = false }
 url = "2.5.8"
 uuid = { version = "1.24.1", default-features = false }
+gpui-kit = "0.8.1"
 walkdir = "2.5.0"
 
 [workspace.lints.rust]

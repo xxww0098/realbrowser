@@ -8,7 +8,7 @@ web
 
 ## Stack
 
-React + TypeScript + shadcn/ui rendered inside Tauri v2. Rust owns the product domain, persistence, RealBrowser Chromium lifecycle, and platform integration through a Tauri-independent `BrowserControl` module. The only browser runtime is the product-distributed Chromium kernel named **RealBrowser**.
+Native GPUI Kit window. Rust owns the product domain, persistence, RealBrowser Chromium lifecycle, and platform integration through `browser-control`. The only browser runtime is the product-distributed Chromium kernel named **RealBrowser**.
 
 ## Users
 
@@ -39,8 +39,8 @@ The product uses a local-first Rust control plane around its own Chromium build:
 - Rust publishes the 28-field Persona capability catalogue consumed by the UI. `graphics.canvas` remains `Native` until the running product kernel passes the K1 observation matrix; only then is it projected as `CustomKernel`. All other unimplemented rendering/media/hardware surfaces remain honestly native or Profile-owned.
 - The UI distinguishes `Native` and `Managed`, and `Direct` from `Proxy`. It does not claim proxy leak prevention, anonymity, undetectability, or fingerprint-surface effectiveness without a verified runtime.
 - React never constructs executable paths, Chromium arguments, profile paths, Persona files, or environment variables. Rust normalizes input and assembles every launch plan.
-- Tauri IPC returns opaque identity IDs, stable operator codes, modes and status only; Profile roots, RealBrowser executable paths, application data roots and process IDs stay inside Rust.
-- Tauri IPC errors expose stable product codes, field issues and fixed remediation text. Internal process, filesystem, Profile and storage diagnostics never become renderer messages.
+- The desktop projection returns opaque identity IDs, stable operator codes, modes and status only; Profile roots, RealBrowser executable paths, application data roots and process IDs stay inside Rust.
+- Operator errors expose stable product codes, field issues and fixed remediation text. Internal process, filesystem, Profile and storage diagnostics never become view-model text.
 - Profile isolation uses a complete non-default User Data root per identity, a cross-process application lease, and platform process ownership. Restart reconciliation requires the recorded PID, the currently verified RealBrowser executable/version, and the exact User Data argument to match before adoption; a Google Chrome journal is never adopted.
 - Stopping an identity terminates only its verified RealBrowser runtime. Managed launches disable Chromium background mode and use a dedicated Unix process group. The browser bundle, executable display name, visible product strings and icons are branded RealBrowser.
 - Sensitive product-Chromium Profile contents remain opaque and browser-owned. Cookie import/export, password storage, 2FA custody, automation, and cloud/team synchronization are outside MR-0.

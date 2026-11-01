@@ -32,10 +32,7 @@ fn main() -> Result<()> {
                     "warnings",
                 ],
             )?;
-            run("cargo", &["test", "--workspace"])?;
-            run("pnpm", &["--filter", "@realbrowser/desktop", "check"])?;
-            run("pnpm", &["--filter", "@realbrowser/desktop", "test"])?;
-            run("pnpm", &["--filter", "@realbrowser/desktop", "build"])
+            run("cargo", &["test", "--workspace"])
         }
         _ => {
             eprintln!("Usage: cargo xtask <structure|ci>");
