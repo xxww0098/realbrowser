@@ -1,22 +1,8 @@
 # RealBrowser
 
-Local-first browser identity manager. The operator window is a native GPUI Kit shell; identity, persona, network, and process ownership stay in the Rust control plane.
+Local-first browser identity manager. The operator window is a native GPUI Kit shell. Identity, persona, network, and process ownership stay in Rust.
 
-## Current slice
-
-- Isolated RealBrowser Chromium User Data root per Browser Identity.
-- Create, list, rename, start, stop, and recoverable archive.
-- Cross-process Profile lease with canonical-root and symlink escape checks.
-- SQLite metadata with revision checks and a runtime reconciliation journal.
-- Restart recovery adopts only the recorded PID whose executable, product-kernel manifest/version and User Data argument still match. Local Google Chrome is never discovered, launched, adopted or used as a fallback.
-- Managed RealBrowser starts with background mode disabled. On Unix, each launch owns a process group; Stop gives the product Chromium parent a bounded graceful exit for state flush, then force-stops the remaining group if needed.
-- Stable Rust-owned operator codes remain attached to an identity across sorting, rename, and archive/restore.
-- The GPUI shell renders capability/status projections only. Profile roots, browser executable paths, application data paths, and process IDs stay inside Rust.
-- Stable error codes stay on the control-plane boundary, while filesystem, process and storage diagnostics remain Rust-only behind fixed user remediation messages.
-- Versioned Persona v5 with migration, a stable per-identity seed, and 28 Rust-owned region, device, graphics, media, and privacy capabilities. Rust writes the K0 secret-free `persona.json` and supplies only `--realbrowser-persona-file` to the product binary.
-- K1 Canvas 2D readback noise lives in Blink C++, is seeded/idempotent, changes copies only, and covers `getImageData`, `toDataURL`, `toBlob`, iframe and dedicated-worker OffscreenCanvas. WebGL, Audio, TLS and JS hooks are unchanged.
-- Typed product-Chromium execution plan for locale, window size, WebRTC, timezone and coherent Viewport/Screen/DPR. Every start observes the Canvas K1 matrix; `graphics.canvas` becomes `CustomKernel` only while a passing product runtime is active.
-- Versioned Network Egress configuration for Direct, HTTP, HTTPS, and SOCKS5 no-auth/IP-allowlist proxies, compiled only by Rust into Chromium arguments; Proxy launch requires the Persona WebRTC non-proxied-UDP guard.
+What the product does, and what it will not claim, is [`PRODUCT.md`](PRODUCT.md). Domain words are [`CONTEXT.md`](CONTEXT.md).
 
 Authenticated proxies, rotation, fail-closed OS egress, cloud sync, cookie import/export, automation, and undetectability claims are not included.
 

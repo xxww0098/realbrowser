@@ -1,87 +1,6 @@
----
-name: RealBrowser
-description: A quiet, dense desktop console for isolated browser environments.
-colors:
-  primary: "#2855ff"
-  primary-soft: "#edf1ff"
-  canvas: "#ffffff"
-  ink: "#11182c"
-  quiet-surface: "#f7f7f5"
-  quiet-text: "#6e768c"
-  hairline: "#e8e8e4"
-  strong-line: "#d5d5cf"
-  success: "#20bd62"
-  warning-soft: "#fff6dc"
-  destructive: "#dc3b4b"
-typography:
-  headline:
-    fontFamily: "-apple-system, BlinkMacSystemFont, Segoe UI, PingFang SC, Microsoft YaHei, sans-serif"
-    fontSize: "28px"
-    fontWeight: 750
-    lineHeight: 1.2
-    letterSpacing: "-0.035em"
-  title:
-    fontFamily: "-apple-system, BlinkMacSystemFont, Segoe UI, PingFang SC, Microsoft YaHei, sans-serif"
-    fontSize: "20px"
-    fontWeight: 700
-    lineHeight: 1.25
-    letterSpacing: "-0.025em"
-  body:
-    fontFamily: "-apple-system, BlinkMacSystemFont, Segoe UI, PingFang SC, Microsoft YaHei, sans-serif"
-    fontSize: "13px"
-    fontWeight: 400
-    lineHeight: 1.5
-  label:
-    fontFamily: "-apple-system, BlinkMacSystemFont, Segoe UI, PingFang SC, Microsoft YaHei, sans-serif"
-    fontSize: "12px"
-    fontWeight: 600
-    lineHeight: 1.25
-rounded:
-  control-sm: "11px"
-  control: "14px"
-  field: "15px"
-  surface: "19px"
-spacing:
-  xs: "8px"
-  sm: "12px"
-  md: "16px"
-  lg: "24px"
-  xl: "28px"
-components:
-  button-primary:
-    backgroundColor: "{colors.primary}"
-    textColor: "{colors.canvas}"
-    typography: "{typography.label}"
-    rounded: "{rounded.control}"
-    padding: "0 16px"
-    height: "40px"
-  button-outline:
-    backgroundColor: "{colors.canvas}"
-    textColor: "{colors.ink}"
-    typography: "{typography.label}"
-    rounded: "{rounded.control}"
-    padding: "0 16px"
-    height: "40px"
-  input:
-    backgroundColor: "{colors.canvas}"
-    textColor: "{colors.ink}"
-    typography: "{typography.body}"
-    rounded: "{rounded.control}"
-    padding: "0 14px"
-    height: "40px"
-  table-container:
-    backgroundColor: "{colors.canvas}"
-    textColor: "{colors.ink}"
-    rounded: "{rounded.surface}"
-  capability-badge:
-    backgroundColor: "{colors.quiet-surface}"
-    textColor: "{colors.quiet-text}"
-    typography: "{typography.label}"
-    rounded: "999px"
-    padding: "3px 7px"
----
+# Design system
 
-# Design System: RealBrowser
+Visual contract for the GPUI operator window. These are the intended scale and color, not a web stylesheet. Product scope stays in [`PRODUCT.md`](PRODUCT.md).
 
 ## Overview
 
@@ -100,20 +19,21 @@ The main workspace is continuous and table-led. Warm hairlines, white surfaces, 
 
 ## Colors
 
-The palette is predominantly white and warm-neutral, with one vivid operational blue and small semantic accents.
+One operational blue, warm neutrals, and status colors that never become decoration.
 
-### Primary
-
-- **Operator Blue:** Used for the active destination, primary actions, focus treatment, and interactive Persona values.
-- **Blue Wash:** Used behind subtle selected or mapped states.
-
-### Neutral
-
-- **Clear Canvas:** The application and raised-surface background.
-- **Deep Ink:** Primary headings, names, and critical values.
-- **Warm Quiet Surface:** Navigation rail, table header, subtle controls, and passive badges.
-- **Quiet Text:** Secondary metadata and native values.
-- **Warm Hairline / Strong Line:** Low-contrast separators and the stronger tier for inputs and major controls.
+| Role | Hex | Use |
+| --- | --- | --- |
+| Operator Blue | `#2855ff` | Primary action, selection, focus |
+| Blue Wash | `#edf1ff` | Selected or launch-mapped state |
+| Clear Canvas | `#ffffff` | Window and raised surfaces |
+| Deep Ink | `#11182c` | Names and critical values |
+| Warm Quiet Surface | `#f7f7f5` | Rail, table header, passive badges |
+| Quiet Text | `#6e768c` | Secondary metadata |
+| Warm Hairline | `#e8e8e4` | Low-contrast separators |
+| Strong Line | `#d5d5cf` | Inputs and major controls |
+| Success | `#20bd62` | Status only |
+| Warning | `#fff6dc` | Status wash only |
+| Destructive | `#dc3b4b` | Status only |
 
 ### Named Rules
 
@@ -212,3 +132,7 @@ Each row pairs a short field name with either a real control or a read-only valu
 - **Don't** add verbose onboarding or promotional paragraphs to operational screens.
 - **Don't** expose controls for fingerprint behavior the runtime cannot execute and observe.
 - **Don't** use sharp corners, heavy outlines, gradients, or indiscriminate pill containers.
+
+## Accessibility
+
+The environment list, search, and primary actions must be keyboard operable. Focus stays visible. Status is never color alone. Text on Operator Blue, Deep Ink, and Clear Canvas meets WCAG 2.2 AA.
