@@ -59,7 +59,7 @@ resolver = "3"          # edition 2024 + 声明了 rust-version 时，resolver 3
 
 **为什么目录名必须等于 crate 名**：`cargo tree`、编译错误、`--timings` 报告里出现的都是 **crate 名**。当目录叫 `psd-x` 而 crate 叫 `psdx` 时，你无法把报告里的一行映射回磁盘上的一个目录。
 
-**多语言单仓库的例外**：`apps/ services/ tools/` 这类顶层划分**不是** Rust 拓扑决策——当 `tools/` 下同时有 Rust crate 和 pnpm 包时，按部署角色划分是合理的。M-CRATES-FLAT-FOLDER 管的是 **crate 的布局**，不是多语言仓库的布局。**把这个例外写进文档，而不是留给后人重新发现。**
+**多语言单仓库的例外**：`apps/ services/ tools/` 这类顶层划分**不是** Rust 拓扑决策——当 `tools/` 下同时有 Rust crate 和脚本或其他语言的包时，按部署角色划分是合理的。M-CRATES-FLAT-FOLDER 管的是 **crate 的布局**，不是多语言仓库的布局。**把这个例外写进文档，而不是留给后人重新发现。**
 
 **反例**［实测］：某仓库的 `services/cloud/migration` 是一个独立 workspace 成员，却位于 `services/cloud` 这个 package 的目录内部。更糟的是主 crate 用 15 处 `#[path = "../migration/src/*.rs"]` 把它的源码**再编译一遍**——5,049 行里有 3,967 行被编译两次，一次进 `libcloud_migration.rlib`，一次进 `libozon_cloud.rlib`。
 
@@ -861,7 +861,7 @@ workspace = true
 
 在有 `[workspace.dependencies]` 的前提下，**`=` 通常是多余的**：workspace 表已经给了单点控制，再叠一层 `=` 只会让「某成员用 `=1.2.3`、另一成员用 `^1.2.3`」这种分裂更隐蔽。
 
-**真正需要 `=` 的场景**：该依赖的 patch 版本曾经引入过破坏（如 `tauri` 这类与构建产物强绑定的框架）。**这时要写注释说明原因**，否则后人不敢动也不知道为什么。
+**真正需要 `=` 的场景**：该依赖的 patch 版本曾经引入过破坏（如与系统 WebView 或打包器强绑定的框架）。**这时要写注释说明原因**，否则后人不敢动也不知道为什么。
 
 ## 4.4 MSRV、edition、resolver
 

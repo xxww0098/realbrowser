@@ -16,7 +16,6 @@ Repository-wide rules for coding agents: an index plus the norms every change mu
 - AdsPower UX/kernel comparison and chase order: [`docs/adspower-comparison.md`](docs/adspower-comparison.md)
 - Kernel-level Persona path (if Chromium patches are justified): [`docs/kernel-level-persona.md`](docs/kernel-level-persona.md)
 - Commands, dev runtime, verification, and Computer Use: [`README.md`](README.md)
-- Current delivery sequence: [`.scratch/fingerprint-browser/implementation/minimum-runnable-plan.md`](.scratch/fingerprint-browser/implementation/minimum-runnable-plan.md)
 
 ## Documentation index
 
@@ -30,7 +29,6 @@ Repository-wide rules for coding agents: an index plus the norms every change mu
 | `docs/fingerprint-browser-principles.md` | Browser fingerprint surfaces, modification seams, and coherence constraints |
 | `docs/adspower-comparison.md` | AdsPower public surface vs RealBrowser, UX chase order, kernel decision |
 | `docs/kernel-level-persona.md` | Product Chromium K0+K1 Persona contract and acceptance path |
-| `.scratch/fingerprint-browser/implementation/minimum-runnable-plan.md` | Delivery sequence and acceptance evidence |
 
 ## First norms
 
@@ -70,8 +68,7 @@ UI acceptance is complete only when the GPUI window exposes the expected state t
 - Rust/module/dependency/testing rules: `docs/rust-engineering.md`
 - Fingerprint surface mechanics and modification seams: `docs/fingerprint-browser-principles.md`
 - AdsPower comparison and UX chase order: `docs/adspower-comparison.md`
-- Commands, prerequisites, ports, and runtime operations: `README.md`
-- Sequencing and readiness evidence: `.scratch/fingerprint-browser/implementation/minimum-runnable-plan.md`
+- Commands, prerequisites, and runtime operations: `README.md`
 
 One meaning has one home. Link to it instead of copying it into a second document.
 

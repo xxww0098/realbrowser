@@ -4,7 +4,7 @@
 
 ## Platform
 
-web
+desktop
 
 ## Stack
 
@@ -20,7 +20,7 @@ The product manages persistent, isolated Browser Identities for legitimate multi
 
 ## Positioning
 
-The product uses a local-first Rust control plane around its own Chromium build: Rust is the authority for identity state, launch plans, storage, Persona compilation, and process ownership while the React interface renders projections and permitted actions. It does not discover, start, adopt, or fall back to a locally installed Google Chrome, and it does not take custody of website passwords, cookies, or 2FA secrets.
+The product uses a local-first Rust control plane around its own Chromium build: Rust is the authority for identity state, launch plans, storage, Persona compilation, and process ownership while the GPUI Kit shell renders projections and permitted actions. It does not discover, start, adopt, or fall back to a locally installed Google Chrome, and it does not take custody of website passwords, cookies, or 2FA secrets.
 
 ## Operating Context
 
@@ -38,7 +38,7 @@ The product uses a local-first Rust control plane around its own Chromium build:
 - K1 changes only Canvas 2D readback copies in Blink: `getImageData`, `toDataURL`, `toBlob`, and OffscreenCanvas `convertToBlob`. Noise is seeded and idempotent per Browser Identity, is process-wide for top frames, iframes and dedicated workers, never writes back to the source canvas, and leaves native function identity intact. WebGL, Audio, TLS and JS hooks are explicitly outside K0+K1.
 - Rust publishes the 28-field Persona capability catalogue consumed by the UI. `graphics.canvas` remains `Native` until the running product kernel passes the K1 observation matrix; only then is it projected as `CustomKernel`. All other unimplemented rendering/media/hardware surfaces remain honestly native or Profile-owned.
 - The UI distinguishes `Native` and `Managed`, and `Direct` from `Proxy`. It does not claim proxy leak prevention, anonymity, undetectability, or fingerprint-surface effectiveness without a verified runtime.
-- React never constructs executable paths, Chromium arguments, profile paths, Persona files, or environment variables. Rust normalizes input and assembles every launch plan.
+- The shell never constructs executable paths, Chromium arguments, profile paths, Persona files, or environment variables. Rust normalizes input and assembles every launch plan.
 - The desktop projection returns opaque identity IDs, stable operator codes, modes and status only; Profile roots, RealBrowser executable paths, application data roots and process IDs stay inside Rust.
 - Operator errors expose stable product codes, field issues and fixed remediation text. Internal process, filesystem, Profile and storage diagnostics never become view-model text.
 - Profile isolation uses a complete non-default User Data root per identity, a cross-process application lease, and platform process ownership. Restart reconciliation requires the recorded PID, the currently verified RealBrowser executable/version, and the exact User Data argument to match before adoption; a Google Chrome journal is never adopted.
@@ -51,7 +51,7 @@ The product uses a local-first Rust control plane around its own Chromium build:
 - Product and browser name: **RealBrowser**. Product Chromium bundles, executable presentation and icons use this name and the RealBrowser visual asset.
 - Interface language for the first build: Simplified Chinese.
 - The interface should sit credibly beside HubStudio, AdsPower, and Multilogin: dense, operational, status-forward, and familiar to browser-profile operators.
-- shadcn/ui is the component foundation. Commercial references set the craft bar and information architecture only; their branding, claims, and distinctive trade dress are not copied.
+- The operator window is GPUI Kit. Commercial references set the craft bar and information architecture only; their branding, claims, and distinctive trade dress are not copied.
 - Primary workspaces use one continuous content column. Persistent left-right content splits are prohibited; interruptive creation/editing may use dialogs and contextual detail may use a temporary side drawer.
 - The interface uses a soft, consistent corner language: controls are visibly rounded and major surfaces are more generous, while avoiding pill-shaped containers and borderless ambiguity.
 - Border craft follows the supplied desktop reference: warm low-contrast 1px separators, one stronger outline tier for inputs and major surfaces, and soft downward-offset shadows only where elevation is real.
@@ -59,13 +59,11 @@ The product uses a local-first Rust control plane around its own Chromium build:
 ## Evidence on Hand
 
 - Product language and domain boundaries: `CONTEXT.md`.
-- MR-0 scope, state model, and acceptance journey: `.scratch/fingerprint-browser/implementation/minimum-runnable-plan.md`.
-- Cross-platform build evidence and gaps: `.scratch/fingerprint-browser/research/cross-platform-build-readiness.md` plus the platform-specific reports alongside it.
 - No customer names, testimonials, production benchmarks, security certification, compatibility certification, or commercial pricing are available and none may be fabricated in the interface.
 
 ## Product Principles
 
-1. Rust owns truth; React explains state and offers permitted actions.
+1. Rust owns truth; the GPUI Kit shell explains state and offers permitted actions.
 2. Isolation is a product invariant, not a label: Profile, Persona, and Network Egress remain explicit and separate.
 3. Default behavior is honest and recoverable: no hidden spoofing, fail-open network claim, destructive deletion, or silent state takeover.
 4. Frequent actions remain fast at table density; advanced configuration reveals progressively without obscuring current state.
@@ -73,4 +71,4 @@ The product uses a local-first Rust control plane around its own Chromium build:
 
 ## Accessibility & Inclusion
 
-The primary environment-management path must be fully keyboard operable, preserve visible focus, avoid color-only status communication, and meet WCAG 2.2 AA contrast for rendered web content.
+The primary environment-management path must be fully keyboard operable, preserve visible focus, avoid color-only status communication, and meet WCAG 2.2 AA contrast in the operator window.
