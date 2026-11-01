@@ -1,4 +1,6 @@
-# Fingerprint Browser
+# Domain language
+
+Words for RealBrowser. Use these names in code, projections, and the operator window. Do not invent a synonym.
 
 A general-purpose desktop product for managing authorized website accounts through separated, persistent browser identities, configurable coherent personas, and controlled network egress. E-commerce is a primary use case, not a platform boundary or an anti-detection guarantee.
 

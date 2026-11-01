@@ -1,7 +1,5 @@
 # Product
 
-<!-- impeccable:product-schema 1 -->
-
 ## Platform
 
 desktop
@@ -46,20 +44,12 @@ The product uses a local-first Rust control plane around its own Chromium build:
 - Sensitive product-Chromium Profile contents remain opaque and browser-owned. Cookie import/export, password storage, 2FA custody, automation, and cloud/team synchronization are outside MR-0.
 - Commercial distribution later requires signed builds, signed updates, platform-native verification of the Persona Runtime across every claimed frame/worker surface, and fail-closed Network Egress.
 
-## Brand Commitments
+## Brand
 
-- Product and browser name: **RealBrowser**. Product Chromium bundles, executable presentation and icons use this name and the RealBrowser visual asset.
+- Product and browser name: **RealBrowser**. Bundles, executable presentation, and icons use this name.
 - Interface language for the first build: Simplified Chinese.
-- The interface should sit credibly beside HubStudio, AdsPower, and Multilogin: dense, operational, status-forward, and familiar to browser-profile operators.
-- The operator window is GPUI Kit. Commercial references set the craft bar and information architecture only; their branding, claims, and distinctive trade dress are not copied.
-- Primary workspaces use one continuous content column. Persistent left-right content splits are prohibited; interruptive creation/editing may use dialogs and contextual detail may use a temporary side drawer.
-- The interface uses a soft, consistent corner language: controls are visibly rounded and major surfaces are more generous, while avoiding pill-shaped containers and borderless ambiguity.
-- Border craft follows the supplied desktop reference: warm low-contrast 1px separators, one stronger outline tier for inputs and major surfaces, and soft downward-offset shadows only where elevation is real.
-
-## Evidence on Hand
-
-- Product language and domain boundaries: `CONTEXT.md`.
-- No customer names, testimonials, production benchmarks, security certification, compatibility certification, or commercial pricing are available and none may be fabricated in the interface.
+- The window should feel as dense and status-forward as HubStudio, AdsPower, or Multilogin. Their branding, claims, and trade dress are not copied.
+- Visual rules: [`DESIGN.md`](DESIGN.md).
 
 ## Product Principles
 
@@ -67,8 +57,8 @@ The product uses a local-first Rust control plane around its own Chromium build:
 2. Isolation is a product invariant, not a label: Profile, Persona, and Network Egress remain explicit and separate.
 3. Default behavior is honest and recoverable: no hidden spoofing, fail-open network claim, destructive deletion, or silent state takeover.
 4. Frequent actions remain fast at table density; advanced configuration reveals progressively without obscuring current state.
-5. Every commercial claim must be backed by a platform-native test or remain visibly described as not yet available.
+5. Every commercial claim must be backed by a platform-native test or remain visibly described as not yet available. Do not invent customer names, testimonials, benchmarks, certifications, or prices.
 
-## Accessibility & Inclusion
+## Accessibility
 
-The primary environment-management path must be fully keyboard operable, preserve visible focus, avoid color-only status communication, and meet WCAG 2.2 AA contrast in the operator window.
+Keyboard, focus, and contrast rules for the operator window are in [`DESIGN.md`](DESIGN.md).
