@@ -39,7 +39,7 @@
 
 ```toml
 [workspace]
-members = ["crates/*", "apps/desktop/src-tauri", "services/cloud"]
+members = ["crates/*", "apps/desktop", "services/cloud"]
 resolver = "3"          # edition 2024 + 声明了 rust-version 时，resolver 3 是 MSRV 感知的，严格更优
 ```
 

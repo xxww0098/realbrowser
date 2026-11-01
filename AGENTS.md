@@ -34,7 +34,7 @@ Repository-wide rules for coding agents: an index plus the norms every change mu
 
 ## First norms
 
-- Rust owns business truth. React renders projections and invokes typed Tauri commands.
+- Rust owns business truth. The GPUI Kit shell renders projections and calls `browser-control` in process.
 - Keep `realbrowser-desktop` a thin composition adapter. Browser lifecycle belongs in `browser-control`; OS process work belongs in `browser-platform`.
 - A Browser Identity binds an isolated Profile, a coherent Persona, and one Network Egress policy. Do not weaken one boundary while changing another.
 - Chrome-owned login state is opaque. Do not read, export, sync, back up, or migrate Cookies, Login Data, passwords, or tokens.
@@ -46,7 +46,7 @@ Repository-wide rules for coding agents: an index plus the norms every change mu
 ## Agent workflow
 
 1. Read the source-of-truth documents for the layer being changed.
-2. Trace the real path from React action through Tauri and Rust ownership to persisted/runtime state.
+2. Trace the real path from a GPUI action through Rust ownership to persisted/runtime state.
 3. Implement the smallest complete vertical slice; avoid parallel truths and placeholder capability claims.
 4. Run the checks documented in `README.md`. State clearly when evidence is source-only, cross-compiled, or native runtime proof.
 5. For macOS UI or interaction changes, run the stable Dev shell and complete the Computer Use loop below.
@@ -60,7 +60,7 @@ Repository-wide rules for coding agents: an index plus the norms every change mu
 5. Derive every subsequent element index from the newest state. Use a screenshot only when the accessibility tree is insufficient.
 6. Restore temporary filters or test state and read state once more.
 
-UI acceptance is complete only when the real Tauri window exposes the expected state transition after the action. A frontend build, DOM test, source inspection, or screenshot alone is supporting evidence, not real UI proof. Keep acceptance manager-local unless the task explicitly scopes interaction with an external Chrome page or account.
+UI acceptance is complete only when the GPUI window exposes the expected state transition after the action. Source inspection or a projection test alone is supporting evidence, not real UI proof. Keep acceptance manager-local unless the task explicitly scopes interaction with an external Chrome page or account.
 
 ## Documentation homes
 
@@ -79,7 +79,7 @@ One meaning has one home. Link to it instead of copying it into a second documen
 
 Cloud agents run Ubuntu. That is the hermetic engineering lane, not a macOS or Windows native host.
 
-- Cloud lane: from the project root, run `pnpm install --frozen-lockfile`, then `cargo xtask ci`.
+- Cloud lane: from the project root, run `cargo xtask ci`. Linking the GPUI shell also needs the Linux GUI packages listed in `README.md` and `cargo build -p realbrowser-desktop --features shell`.
 - Native macOS UI, `./dev.sh`, the product Chromium kernel, Computer Use, and ignored tests that launch the kernel stay on a Mac.
 - Capability labels must describe what the runtime actually applies and observes. Never present planned, partial, or page-only coverage as applied browser-wide. Do not project `graphics.canvas` as `CustomKernel` without a passing product runtime.
 

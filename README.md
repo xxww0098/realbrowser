@@ -1,6 +1,6 @@
 # RealBrowser
 
-Local-first browser identity manager built with React, TypeScript, Tauri v2, and a multi-crate Rust control plane.
+Local-first browser identity manager. The operator window is a native GPUI Kit shell; identity, persona, network, and process ownership stay in the Rust control plane.
 
 ## Current slice
 
@@ -11,8 +11,8 @@ Local-first browser identity manager built with React, TypeScript, Tauri v2, and
 - Restart recovery adopts only the recorded PID whose executable, product-kernel manifest/version and User Data argument still match. Local Google Chrome is never discovered, launched, adopted or used as a fallback.
 - Managed RealBrowser starts with background mode disabled. On Unix, each launch owns a process group; Stop gives the product Chromium parent a bounded graceful exit for state flush, then force-stops the remaining group if needed.
 - Stable Rust-owned operator codes remain attached to an identity across sorting, rename, and archive/restore.
-- Tauri sends capability/status projections to React without exposing Profile roots, browser executable paths, application data paths, or process IDs.
-- Stable error codes cross Tauri IPC, while filesystem, process and storage diagnostics remain Rust-only behind fixed user remediation messages.
+- The GPUI shell renders capability/status projections only. Profile roots, browser executable paths, application data paths, and process IDs stay inside Rust.
+- Stable error codes stay on the control-plane boundary, while filesystem, process and storage diagnostics remain Rust-only behind fixed user remediation messages.
 - Versioned Persona v5 with migration, a stable per-identity seed, and 28 Rust-owned region, device, graphics, media, and privacy capabilities. Rust writes the K0 secret-free `persona.json` and supplies only `--realbrowser-persona-file` to the product binary.
 - K1 Canvas 2D readback noise lives in Blink C++, is seeded/idempotent, changes copies only, and covers `getImageData`, `toDataURL`, `toBlob`, iframe and dedicated-worker OffscreenCanvas. WebGL, Audio, TLS and JS hooks are unchanged.
 - Typed product-Chromium execution plan for locale, window size, WebRTC, timezone and coherent Viewport/Screen/DPR. Every start observes the Canvas K1 matrix; `graphics.canvas` becomes `CustomKernel` only while a passing product runtime is active.
@@ -22,14 +22,14 @@ Authenticated proxies, rotation, fail-closed OS egress, cloud sync, cookie impor
 
 ## Develop
 
-Prerequisites: pnpm, the pinned Rust toolchain from `rust-toolchain.toml`, and a packaged RealBrowser product kernel under `.dev/kernel` (or `REALBROWSER_KERNEL_DIR`). Google Chrome is neither required nor used.
+Prerequisites: the pinned Rust toolchain from `rust-toolchain.toml`, Linux GUI libraries (`libfontconfig-dev`, `libwayland-dev`, `libxkbcommon-dev`, `libxkbcommon-x11-dev`, `libvulkan1`, `libssl-dev`, `libasound2-dev`), and a packaged RealBrowser product kernel under `.dev/kernel` (or `REALBROWSER_KERNEL_DIR`). Google Chrome is neither required nor used.
 
 ```bash
-pnpm install --frozen-lockfile
-pnpm --filter @realbrowser/desktop dev
-tools/build-realbrowser-chromium-macos.sh
+cargo run -p realbrowser-desktop --features shell
 ./dev.sh
 ```
+
+`./dev.sh` runs the GPUI shell and keeps local state under `.dev/data` via `REALBROWSER_DEV_DATA_ROOT`. The React/Tauri frontend is gone; do not start a Vite server for the desktop window.
 
 Building the macOS product kernel requires the full `/Applications/Xcode.app`; Command Line Tools alone are insufficient. The normal build lane syncs a complete Chromium checkout before applying the pinned K0+K1 patch. A previously verified official source archive can be built without dependency Git metadata only when it already contains matching macOS GN, Ninja, Clang, and Rust host tools:
 
@@ -41,33 +41,17 @@ tools/build-realbrowser-chromium-macos.sh
 
 Offline archive mode still requires the exact pinned Chromium commit, rejects sparse source, validates every host executable as macOS-native, and validates the installed Clang/Rust revisions before building. It is not a Stock Chrome or incomplete-source fallback.
 
-Port `1431` is used by the frontend development server. Direct frontend-only work can use `pnpm --filter @realbrowser/desktop dev`; use `./dev.sh` for the real Tauri shell.
-
-On macOS, `./dev.sh` preserves Vite HMR and the Tauri Rust watcher while wrapping each rebuilt executable in `.dev/macos/RealBrowser Dev.app`. The development-only bundle id is `com.realbrowser.desktop.tauri.dev`, and its local state is isolated under `.dev/data` rather than the release application data directory.
-
-### Computer Use
-
-Keep `./dev.sh` running in its terminal, then wait for the stable application identity:
-
-```bash
-./dev.sh status
-```
-
-Proceed only when the result contains `identity: ready`. Target `com.realbrowser.desktop.tauri.dev`; the release bundle id is never a development target. For every interaction, read the current accessibility state, perform one action, and read state again before selecting another element. Reacquire a full state or screenshot when the accessibility diff is insufficient. Restore temporary filters or test state before finishing.
-
-Real UI proof requires an observed state transition in the Tauri window. Source inspection, a frontend build, DOM tests, and screenshots alone do not satisfy this gate.
+Offline archive mode still requires the exact pinned Chromium commit, rejects sparse source, validates every host executable as macOS-native, and validates the installed Clang/Rust revisions before building. It is not a Stock Chrome or incomplete-source fallback.
 
 ## Verify
 
 ```bash
 cargo xtask structure
 cargo xtask ci
-pnpm --filter @realbrowser/desktop tauri build --debug --bundles app
+cargo build -p realbrowser-desktop --features shell
 ```
 
-`cargo xtask ci` runs workspace structure checks, formatting, Clippy with warnings denied, Rust tests, TypeScript checks, React/Vitest interaction tests, and the production frontend build.
-
-Cursor Cloud on Ubuntu is this hermetic lane: `pnpm install --frozen-lockfile` then `cargo xtask ci`. Native macOS UI, the product kernel, and ignored kernel-launching tests stay on a Mac; see the Cursor Cloud section in [`AGENTS.md`](AGENTS.md).
+`cargo xtask ci` runs workspace structure checks, formatting, Clippy with warnings denied, and Rust tests. The GPUI shell is feature-gated (`shell`) so hermetic tests do not need a display server. Linking the window requires the GUI libraries above.
 
 The native macOS acceptance tests are intentionally ignored by hermetic CI because they launch the packaged RealBrowser product Chromium:
 
@@ -94,6 +78,6 @@ The current macOS development bundle is produced at `target/debug/bundle/macos/R
 | `browser-control` | Use cases, revision rules, launch-plan assembly |
 | `browser-storage` | SQLite adapter and migrations |
 | `browser-platform` | Product-kernel manifest verification and process lifecycle |
-| `realbrowser-desktop` | Thin Tauri commands and composition |
+| `realbrowser-desktop` | GPUI Kit window and in-process composition. Projections only; no profile paths or PIDs |
 
 Engineering rules are maintained in [`docs/rust-engineering.md`](docs/rust-engineering.md). Product truth lives in [`PRODUCT.md`](PRODUCT.md); domain language lives in [`CONTEXT.md`](CONTEXT.md).
