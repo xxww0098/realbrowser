@@ -250,7 +250,7 @@ Content script 默认跑在 **ISOLATED** 世界：和页面共享 DOM，但不�
 | OffscreenCanvas 在 worker | 否 | 否 | 内核或 CDP 目标附着 |
 | HTTP 头 / TLS / H2 | 否 | 否 | 网络栈 |
 
-本仓库对 `juu17/browser-fingerprint-shuffler` 的源码审阅已经证实：Manifest 不声明 `world` / `all_frames` 时，Canvas / Audio / Navigator hook 只影响扩展自己的 JS 世界；只有 WebGL 另插了 page-world 文件，还要等异步 `chrome.storage`，页面可以在补丁装上之前读到真值。[`.scratch/fingerprint-browser/research/juu17-fingerprint-shuffler.md`](../.scratch/fingerprint-browser/research/juu17-fingerprint-shuffler.md)
+本仓库对 `juu17/browser-fingerprint-shuffler` 的源码审阅已经证实：Manifest 不声明 `world` / `all_frames` 时，Canvas / Audio / Navigator hook 只影响扩展自己的 JS 世界；只有 WebGL 另插了 page-world 文件，还要等异步 `chrome.storage`，页面可以在补丁装上之前读到真值。
 
 MAIN world 的另一面：页面可以检测原型是否被包装（`toString` 异常、堆栈、描述符）。`iframe.contentWindow.HTMLCanvasElement` 是一份**未打补丁的新对象**；CreepJS 专门为此做了 iframe / prototype 测页。
 
@@ -883,10 +883,3 @@ K2 以后不属于本轮。WebGL、Audio、TLS 或 JS hook 若要进入产品，
 - [GoLogin: How browser fingerprints work](https://gologin.com/docs/how-browser-fingerprints-work)
 - [GoLogin profile fingerprint settings](https://support.gologin.com/en/articles/14810056-profile-fingerprint-settings)
 - [BotBrowser Canvas guide](https://github.com/botswin/BotBrowser/blob/main/docs/guides/fingerprint/CANVAS.md)
-
-本仓库已有审阅：
-
-- [`.scratch/fingerprint-browser/research/persona-settings-open-source.md`](../.scratch/fingerprint-browser/research/persona-settings-open-source.md)
-- [`.scratch/fingerprint-browser/research/juu17-fingerprint-shuffler.md`](../.scratch/fingerprint-browser/research/juu17-fingerprint-shuffler.md)
-- [`.scratch/fingerprint-browser/research/chrome-control-constraints.md`](../.scratch/fingerprint-browser/research/chrome-control-constraints.md)
-- [`.scratch/fingerprint-browser/research/virtualbrowser-xchrome.md`](../.scratch/fingerprint-browser/research/virtualbrowser-xchrome.md)

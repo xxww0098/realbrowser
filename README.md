@@ -29,7 +29,7 @@ cargo run -p realbrowser-desktop --features shell
 ./dev.sh
 ```
 
-`./dev.sh` runs the GPUI shell and keeps local state under `.dev/data` via `REALBROWSER_DEV_DATA_ROOT`. The React/Tauri frontend is gone; do not start a Vite server for the desktop window.
+`./dev.sh` runs the GPUI shell and keeps local state under `.dev/data` via `REALBROWSER_DEV_DATA_ROOT`.
 
 Building the macOS product kernel requires the full `/Applications/Xcode.app`; Command Line Tools alone are insufficient. The normal build lane syncs a complete Chromium checkout before applying the pinned K0+K1 patch. A previously verified official source archive can be built without dependency Git metadata only when it already contains matching macOS GN, Ninja, Clang, and Rust host tools:
 
@@ -38,8 +38,6 @@ REALBROWSER_CHROMIUM_SRC=/absolute/path/to/chromium/src \
 REALBROWSER_CHROMIUM_OFFLINE_SOURCE_ARCHIVE=1 \
 tools/build-realbrowser-chromium-macos.sh
 ```
-
-Offline archive mode still requires the exact pinned Chromium commit, rejects sparse source, validates every host executable as macOS-native, and validates the installed Clang/Rust revisions before building. It is not a Stock Chrome or incomplete-source fallback.
 
 Offline archive mode still requires the exact pinned Chromium commit, rejects sparse source, validates every host executable as macOS-native, and validates the installed Clang/Rust revisions before building. It is not a Stock Chrome or incomplete-source fallback.
 

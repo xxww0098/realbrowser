@@ -136,7 +136,7 @@ Local API 用 `browser_kernel_config` 选内核：
 
 更细的决策规则：
 
-1. **当前只做 C 的 K0+K1。** MR-0 只接受带产品清单、哈希和观测证据的 RealBrowser Chromium。[`minimum-runnable-plan.md`](../.scratch/fingerprint-browser/implementation/minimum-runnable-plan.md)
+1. **当前只做 C 的 K0+K1。** MR-0 只接受带产品清单、哈希和观测证据的 RealBrowser Chromium。范围以 [`PRODUCT.md`](../PRODUCT.md) 为准。
 2. **不要做 FlowerBrowser。** 电商卖家后台是 Chromium 世界。第二引擎只增加更新矩阵。
 3. **不要做“假移动 UA”，也不要做云手机。** AdsPower 自己区分：它是浏览器环境，不是远程 Android（他们拿 DuoPlus 当对照）。授权桌面卖家工作流不需要 iPhone Persona。[cloud phone vs](https://www.adspower.com/blog/cloud-phone-vs-antidetect-browser)
 4. **产品 Chromium 继续保持 UA major = 真内核 major，且本轮不改 TLS。** K1 只解决同机不同 Identity 的 Canvas 2D 回读差异。
@@ -354,8 +354,7 @@ RealBrowser 今天已经比 AdsPower **更硬**的部分：
 | 产品做不做、怎么对外说 | [`PRODUCT.md`](../PRODUCT.md) |
 | Identity / Profile / Persona / Egress | [`CONTEXT.md`](../CONTEXT.md) |
 | 指纹机制与改法 | [`docs/fingerprint-browser-principles.md`](fingerprint-browser-principles.md) |
-| MR-0 已交付与排除项 | [`.scratch/fingerprint-browser/implementation/minimum-runnable-plan.md`](../.scratch/fingerprint-browser/implementation/minimum-runnable-plan.md) |
-| HubStudio 差距（同类对照） | [`.scratch/fingerprint-browser/research/hubstudio-capability-gap.md`](../.scratch/fingerprint-browser/research/hubstudio-capability-gap.md) |
+| MR-0 已交付与排除项 | [`PRODUCT.md`](../PRODUCT.md) |
 | **AdsPower 体验对照与内核决策** | 本文 |
 
 追上第 1 波不需要改 PRODUCT 非目标。第 3 波 Cookie 可移植、第 4 波 Local API 必须先改 PRODUCT 再写代码。第 6 波指的是 K0+K1 之外的扩展，必须先单独研究票，不能从本文直接开工。
@@ -390,4 +389,3 @@ AdsPower 一手：
 - [`PRODUCT.md`](../PRODUCT.md)
 - [`CONTEXT.md`](../CONTEXT.md)
 - [`crates/browser-persona/src/lib.rs`](../crates/browser-persona/src/lib.rs)（27 项能力目录）
-- [`.scratch/fingerprint-browser/implementation/minimum-runnable-plan.md`](../.scratch/fingerprint-browser/implementation/minimum-runnable-plan.md)
