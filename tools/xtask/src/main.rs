@@ -35,7 +35,7 @@ fn main() -> Result<()> {
             run("cargo", &["test", "--workspace"])
         }
         _ => {
-            eprintln!("Usage: cargo xtask <structure|ci>");
+            eprintln!("Usage: cargo run -p xtask -- <structure|ci>");
             Ok(())
         }
     }
