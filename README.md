@@ -44,12 +44,12 @@ Offline archive mode still requires the exact pinned Chromium commit, rejects sp
 ## Verify
 
 ```bash
-cargo xtask structure
-cargo xtask ci
+cargo run -p xtask -- structure
+cargo run -p xtask -- ci
 cargo build -p realbrowser-desktop --features shell
 ```
 
-`cargo xtask ci` runs workspace structure checks, formatting, Clippy with warnings denied, and Rust tests. The GPUI shell is feature-gated (`shell`) so hermetic tests do not need a display server. Linking the window requires the GUI libraries above.
+`cargo run -p xtask -- ci` runs workspace structure checks, formatting, Clippy with warnings denied, and Rust tests. The GPUI shell is feature-gated (`shell`) so hermetic tests do not need a display server. Linking the window requires the GUI libraries above.
 
 The native macOS acceptance tests are intentionally ignored by hermetic CI because they launch the packaged RealBrowser product Chromium:
 

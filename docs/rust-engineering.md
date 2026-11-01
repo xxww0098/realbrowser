@@ -631,7 +631,7 @@ opt-level = 3
 
 同理，2021 年「`split-debuginfo = "unpacked"` 让 macOS 增量快 70%」这条也过期了：对 `debug` 非零且走增量的 `dev` profile，**`unpacked` 早已是 macOS 默认值**。写进清单不会坏，但也不会再给你那 70%。
 
-**规则**：链接器 / debuginfo 优化**在 Linux 上通常有效，在现代 macOS 上通常无效**。无论哪种情况，**测了再改**，并把测量结果写进 `.cargo/config.toml` 的注释里，避免后人反复争论。
+**规则**：链接器 / debuginfo 优化**在 Linux 上通常有效，在现代 macOS 上通常无效**。无论哪种情况，**测了再改**，并把测量结果写进工程文档，避免后人反复争论。
 
 ## 3.6 feature 裁剪是最被低估的杠杆 ［共识：corrode + M-FEATURES-ADDITIVE］
 
@@ -913,8 +913,16 @@ components = ["clippy", "rustfmt"]   # ★ minimal 不含它们！
 
 ## 5.1 所有检查类自动化收进 `cargo xtask` ［共识：matklad］
 
+本仓库不放 `.cargo/config.toml`。直接调用：
+
+```bash
+cargo run -p xtask -- ci
+```
+
+别名只是写法糖，需要时再在本机配置，不要提交进仓库：
+
 ```toml
-# .cargo/config.toml
+# 可选，仅本机
 [alias]
 xtask = "run -p xtask --"
 ```
@@ -923,7 +931,7 @@ xtask = "run -p xtask --"
 
 **但要分清边界**：**进程监管、数据库集群生命周期、SSH/Docker 传输、代码签名与打包，这些天然是 shell 形状的**，用 Rust 重写只会更糟。
 
-**判据**：**「检查」进 xtask，「编排」留给 shell。** 而且 shell 应当**调用** `cargo xtask ci`，而不是自己重新实现检查。
+**判据**：**「检查」进 xtask，「编排」留给 shell。** 而且 shell 应当**调用** `cargo run -p xtask -- ci`，而不是自己重新实现检查。
 
 ## 5.2 门禁阶梯：按「每单位信心的成本」排序
 
@@ -1019,7 +1027,7 @@ check_docs_home()     // 按改动区域要求对应文档在同一提交范围�
 □ rust-toolchain.toml 含 components = ["clippy", "rustfmt"]
 □ crates/ 平铺，目录名 = crate 名
 □ 薄 main + 厚 lib
-□ tools/xtask crate + .cargo/config.toml 的 alias
+□ tools/xtask crate，用 `cargo run -p xtask --` 调用，不提交 `.cargo`
 □ [profile.dev] opt-level=0 + build-override opt-level=3
 □ tests/common/mod.rs（第一个集成测试就建）
 □ 内部 crate `[lib] doctest = false`

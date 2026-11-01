@@ -76,9 +76,9 @@ One meaning has one home. Link to it instead of copying it into a second documen
 
 Cloud agents run Ubuntu. That is the hermetic engineering lane, not a macOS or Windows native host.
 
-- Cloud lane: from the project root, run `cargo xtask ci`. Linking the GPUI shell also needs the Linux GUI packages listed in `README.md` and `cargo build -p realbrowser-desktop --features shell`.
+- Cloud lane: from the project root, run `cargo run -p xtask -- ci`. Linking the GPUI shell also needs the Linux GUI packages listed in `README.md` and `cargo build -p realbrowser-desktop --features shell`.
 - Native macOS UI, `./dev.sh`, the product Chromium kernel, Computer Use, and ignored tests that launch the kernel stay on a Mac.
 - Capability labels must describe what the runtime actually applies and observes. Never present planned, partial, or page-only coverage as applied browser-wide. Do not project `graphics.canvas` as `CustomKernel` without a passing product runtime.
 
-Do not start MR-1 tickets from a cloud agent. Linux `cargo xtask ci` is not native UI or product-kernel proof.
+Do not start MR-1 tickets from a cloud agent. Linux `cargo run -p xtask -- ci` is not native UI or product-kernel proof.
 
