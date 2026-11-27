@@ -22,7 +22,11 @@ jobs:
         with:
           go-version-file: fingerprintkernel/go.mod
           cache-dependency-path: fingerprintkernel/go.sum
-      - run: go -C fingerprintkernel test -short -race ./...
+      - name: Test the core and render local pages with Chrome
+        run: |
+          REALBROWSER_TEST_BINARY=$(command -v google-chrome)
+          export REALBROWSER_TEST_BINARY
+          go -C fingerprintkernel test -short -race ./...
       - run: go -C fingerprintkernel vet ./...
       - run: node --test fingerprintkernel/downloader/*.test.mjs
 

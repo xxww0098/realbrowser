@@ -18,3 +18,5 @@ RealBrowser 维护的独立 Go 模块，供 RealBrowser 的 Go 桌面工程和�
 `ReadProfile` 和 `WriteProfile` 读写指定资料目录中的 `.browserkernel.json`。编辑部分字段时，先读取当前记录，再修改并保存。使用 SQLite 的宿主可直接保存同一个模型或使用其 JSON 接口。
 
 在本目录运行 `go test -race ./...` 可验证下载、解压、指纹资料与版本切换。运行 `node --test downloader/*.test.mjs` 可单独验证多镜像传输。
+
+要验证受管浏览器能渲染正文，可将 `REALBROWSER_TEST_BINARY` 设为浏览器可执行文件的绝对路径，在本目录运行 `go test -count=1 -run '^TestManagedChromiumRendersLocalContent$' .`。macOS 还需将 `REALBROWSER_TEST_LAUNCHER` 设为临时资料目录专用的 `chromium-test` 启动器路径。测试通过本机 HTTP 服务分别打开动态正文和 403 错误页，每次使用独立临时资料目录。
