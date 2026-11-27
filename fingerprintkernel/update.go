@@ -189,26 +189,52 @@ func writeAtomic(dir, name string, data []byte) error {
 
 // CheckUpdate returns the newest compatible version if it is newer than current.
 func (m *KernelManager) CheckUpdate(ctx context.Context, current string) (string, error) {
-	rel, err := m.FetchInstallableRelease(ctx)
-	if err != nil {
+	rel, err := m.newerRelease(ctx, current)
+	if err != nil || rel == nil {
 		return "", err
 	}
-	if rel == nil || rel.Matched == nil {
-		return "", nil
+	return rel.TagName, nil
+}
+
+// AvailableUpdate returns the installable release newer than current, or nil
+// when none is available. Pass an empty current version for a first install.
+// It resolves the selected asset's SHA-256 (fetching a checksum file if needed)
+// without downloading the browser. Keep the result and pass it to ActivateRelease
+// after user confirmation to install it without querying the release list again.
+func (m *KernelManager) AvailableUpdate(ctx context.Context, current string) (*ReleaseInfo, error) {
+	rel, err := m.newerRelease(ctx, current)
+	if errors.Is(err, errNoReleases) {
+		return nil, nil
+	}
+	if err != nil || rel == nil {
+		return nil, err
+	}
+	sha, err := rel.Matched.expectedSHA256(ctx, m.HTTPClient)
+	if err != nil {
+		return nil, err
+	}
+	rel.Matched.SHA256 = sha
+	return rel, nil
+}
+
+func (m *KernelManager) newerRelease(ctx context.Context, current string) (*ReleaseInfo, error) {
+	rel, err := m.FetchInstallableRelease(ctx)
+	if err != nil || rel == nil || rel.Matched == nil {
+		return nil, err
+	}
+	if current == "" {
+		return rel, nil
 	}
 	next, err := versionParts(rel.TagName)
 	if err != nil {
-		return "", err
-	}
-	if current == "" {
-		return rel.TagName, nil
+		return nil, err
 	}
 	old, err := versionParts(current)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 	if slices.Compare(next, old) > 0 {
-		return rel.TagName, nil
+		return rel, nil
 	}
-	return "", nil
+	return nil, nil
 }

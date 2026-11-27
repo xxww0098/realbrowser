@@ -40,6 +40,8 @@ type ReleaseInfo struct {
 	LatestTag   string         `json:"latest_tag,omitempty"` // populated when a newer release lacks a build for this OS/arch
 }
 
+var errNoReleases = errors.New("fpchromium: no releases found")
+
 // FetchLatestRelease queries the official adryfish/fingerprint-chromium GitHub
 // Releases API and selects the newest compatible release with a matching asset
 // for the current OS/arch. When the latest upstream tag omits a platform build
@@ -85,7 +87,7 @@ func (m *KernelManager) fetchRelease(ctx context.Context, installable bool) (*Re
 		if best != nil {
 			return best, nil
 		}
-		return nil, errors.New("fpchromium: no releases found")
+		return nil, errNoReleases
 	}
 
 	// Default upstream mode: query /releases?per_page=10 in a single request so
@@ -101,7 +103,7 @@ func (m *KernelManager) fetchRelease(ctx context.Context, installable bool) (*Re
 	}
 	best, _ := m.pickRelease(rels, installable)
 	if best == nil {
-		return nil, errors.New("fpchromium: no releases found")
+		return nil, errNoReleases
 	}
 	return best, nil
 }
@@ -570,6 +572,9 @@ func fetchExpectedSHA256(ctx context.Context, cl *http.Client, checksumURL, asse
 		return "", err
 	}
 	req.Header.Set("User-Agent", "fingerprint-chromium-manager")
+	if cl == nil {
+		cl = http.DefaultClient
+	}
 	resp, err := cl.Do(req)
 	if err != nil {
 		return "", fmt.Errorf("fpchromium: fetch checksum %s: %w", checksumURL, err)
@@ -583,6 +588,23 @@ func fetchExpectedSHA256(ctx context.Context, cl *http.Client, checksumURL, asse
 		return "", fmt.Errorf("fpchromium: read checksum: %w", err)
 	}
 	return ParseSHA256Checksum(string(body), assetName)
+}
+
+func (a ReleaseAsset) expectedSHA256(ctx context.Context, cl *http.Client) (string, error) {
+	if raw := strings.TrimSpace(a.SHA256); raw != "" {
+		digest := NormalizeSHA256(raw)
+		if digest == "" {
+			return "", fmt.Errorf("fpchromium: invalid expected sha256 %q", a.SHA256)
+		}
+		return digest, nil
+	}
+	if digest := NormalizeSHA256(a.Digest); digest != "" {
+		return digest, nil
+	}
+	if url := strings.TrimSpace(a.ChecksumURL); url != "" {
+		return fetchExpectedSHA256(ctx, cl, url, filepath.Base(strings.TrimSpace(a.Name)))
+	}
+	return "", nil
 }
 
 // DownloadRelease streams a ReleaseAsset into destDir/<asset.Name> using atomic
@@ -612,25 +634,9 @@ func (m *KernelManager) DownloadRelease(ctx context.Context, asset ReleaseAsset,
 		cl.Jar = m.HTTPClient.Jar
 	}
 
-	// Pre-resolve expected SHA-256 if ChecksumURL, explicit SHA256, or GitHub Digest is supplied,
-	// so corrupt/tampered downloads fail cleanly before commit.
-	expectedSHA := ""
-	if rawSHA := strings.TrimSpace(asset.SHA256); rawSHA != "" {
-		expectedSHA = NormalizeSHA256(rawSHA)
-		if expectedSHA == "" {
-			return "", fmt.Errorf("fpchromium: invalid expected sha256 %q", asset.SHA256)
-		}
-	} else if rawDig := strings.TrimSpace(asset.Digest); rawDig != "" {
-		if dig := NormalizeSHA256(rawDig); dig != "" {
-			expectedSHA = dig
-		}
-	}
-	if expectedSHA == "" && strings.TrimSpace(asset.ChecksumURL) != "" {
-		cs, cerr := fetchExpectedSHA256(ctx, cl, strings.TrimSpace(asset.ChecksumURL), baseName)
-		if cerr != nil {
-			return "", cerr
-		}
-		expectedSHA = cs
+	expectedSHA, err := asset.expectedSHA256(ctx, cl)
+	if err != nil {
+		return "", err
 	}
 
 	resp, err := cl.Do(req)

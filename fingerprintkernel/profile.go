@@ -82,21 +82,27 @@ func EditProfile(ctx context.Context, dir string, edit func(*FingerprintSpec) er
 	if err := f.validateDisplay(); err != nil {
 		return err
 	}
-	raw, err := ExportFingerprintJSON(f)
+	raw, err := MergeFingerprintJSON(string(original), f)
 	if err != nil {
 		return err
-	}
-	data := []byte(raw)
-	if original != nil {
-		data, err = retainProfileExtras(original, data, reflect.TypeFor[FingerprintSpec]())
-		if err != nil {
-			return err
-		}
 	}
 	if err := ctx.Err(); err != nil {
 		return err
 	}
-	return writeAtomic(dir, profileFile, append(data, '\n'))
+	return writeAtomic(dir, profileFile, append([]byte(raw), '\n'))
+}
+
+// MergeFingerprintJSON replaces the known fields in original with spec,
+// including fields explicitly cleared in spec. Unknown fields at the top
+// level and inside known objects are retained. An empty original creates a
+// new document. Database callers should read and write in one transaction.
+func MergeFingerprintJSON(original string, spec FingerprintSpec) (string, error) {
+	raw, err := ExportFingerprintJSON(spec)
+	if err != nil || original == "" {
+		return raw, err
+	}
+	merged, err := retainProfileExtras([]byte(original), []byte(raw), reflect.TypeFor[FingerprintSpec]())
+	return string(merged), err
 }
 
 // Use the JSON schema of the Go struct to distinguish cleared optional fields

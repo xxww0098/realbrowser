@@ -6,18 +6,22 @@ RealBrowser 维护的独立 Go 模块，供 RealBrowser 的 Go 桌面工程和�
 
 | 用途 | 接口 |
 | --- | --- |
-| 查询发行信息与当前平台的可安装更新 | `KernelManager.FetchLatestRelease`、`FetchInstallableRelease`、`CheckUpdate` |
+| 查阅发行信息、检查可确认安装的更新 | `KernelManager.FetchLatestRelease`、`FetchInstallableRelease`、`AvailableUpdate`、`CheckUpdate` |
 | 下载、校验、安装和切换 | `KernelManager.Update`、`ActivateRelease`、`ActiveRelease` |
 | Node 宿主的镜像测速、分段下载和续传 | `downloader/download-watch.mjs` 的 `downloadArchive` |
 | 使用锁定的首次安装包 | `PinnedRelease`、`PinnedBuild.Asset`、`PinnedBuild.Unpack` |
-| 编辑和持久化指纹详情 | `FingerprintSpec`、`ImportFingerprintJSON`、`ExportFingerprintJSON`、`ReadProfile`、`EditProfile`、`WriteProfile` |
+| 编辑和持久化指纹详情 | `FingerprintSpec`、`ImportFingerprintJSON`、`ExportFingerprintJSON`、`MergeFingerprintJSON`、`ReadProfile`、`EditProfile`、`WriteProfile` |
 | 启动、等待、终止子进程和登记活动实例 | `StartProcess`、`Process`、`Registry` |
 
-有版本选择界面时，先获取发行版，再把选中的 `ReleaseInfo` 交给 `ActivateRelease`。后台自动升级可以直接调用 `Update`。检查和自动升级都选择当前平台可安装、带 SHA-256 校验信息的最高稳定版本，跳过空的 XZ 归档。自动选包时，文件名须标明匹配的处理器架构。macOS 也接受标明 `universal` 或 `universal2` 的构建。模块内已锁定的构建可通过平台、版本、文件名和内置摘要确认。
+需要用户确认更新时，调用 `mgr.AvailableUpdate(ctx, current)`。返回 `nil, nil` 表示没有可用更新，首次安装可将 `current` 留空。将返回的发行信息保存在宿主，用 `release.TagName` 显示版本。用户确认后把同一份 `release` 传给 `mgr.ActivateRelease(ctx, dir, current, release, progress)`。预览阶段会读取必要的 SHA-256 校验文件，保留摘要，到安装时才下载安装包。即使上游清单随后发布了新版，确认的版本、文件和摘要仍由这次检查决定。只显示版本号可以继续用 `CheckUpdate`，后台自动升级可以直接调用 `Update`。
+
+检查和自动升级都选择当前平台可安装、带 SHA-256 校验信息的最高稳定版本，跳过空的 XZ 归档。自动选包时，文件名须标明匹配的处理器架构。macOS 也接受标明 `universal` 或 `universal2` 的构建。模块内已锁定的构建可通过平台、版本、文件名和内置摘要确认。
 
 更新器校验下载内容后才写入 `active.json`。版本保存在同一根目录的 `versions/` 下，已有进程可继续使用旧文件。已有安装的版本号可作为 `current` 参数传入，更新器会比较版本并避免降级。
 
-`ReadProfile` 读取资料目录中的 `.browserkernel.json`。修改语言、时区等单项偏好时，使用 `EditProfile(ctx, dir, edit)`。它持有同一把文件锁读取最新配置并保存，回调返回错误会保留原文件。`WriteProfile` 可整份替换当前版本定义的字段。两种写法都会保留磁盘中较新版本写入的扩展字段，包括已知对象中的扩展字段。使用 SQLite 的宿主可直接保存同一个模型或使用其 JSON 接口。
+`ReadProfile` 读取资料目录中的 `.browserkernel.json`。修改语言、时区等单项偏好时，使用 `EditProfile(ctx, dir, edit)`。它持有同一把文件锁读取最新配置并保存，回调返回错误会保留原文件。`WriteProfile` 可整份替换当前版本定义的字段。两种写法都会保留磁盘中较新版本写入的扩展字段，包括已知对象中的扩展字段。
+
+用 SQLite 等存储的宿主可以在一个事务里读出原始 JSON，调用 `MergeFingerprintJSON(original, spec)`，再写回返回的字符串。`spec` 提供全部已知字段，清空的可选字段会被移除。原始 JSON 中的扩展字段会保留。传入空字符串可以创建新文档。
 
 在本目录运行 `go test -race ./...` 可验证下载、解压、指纹资料与版本切换。运行 `node --test downloader/*.test.mjs` 可单独验证多镜像传输。
 
