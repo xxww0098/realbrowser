@@ -1,0 +1,39 @@
+name: 指纹核心
+
+on:
+  push:
+    paths:
+      - 'fingerprintkernel/**'
+      - '.github/workflows/fingerprintkernel.yml'
+  pull_request:
+    paths:
+      - 'fingerprintkernel/**'
+      - '.github/workflows/fingerprintkernel.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-go@v7
+        with:
+          go-version-file: fingerprintkernel/go.mod
+          cache-dependency-path: fingerprintkernel/go.sum
+      - run: go -C fingerprintkernel test -short -race ./...
+      - run: go -C fingerprintkernel vet ./...
+      - run: node --test fingerprintkernel/downloader/*.test.mjs
+
+  windows:
+    runs-on: windows-latest
+    env:
+      CGO_ENABLED: '0'
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-go@v7
+        with:
+          go-version-file: fingerprintkernel/go.mod
+          cache-dependency-path: fingerprintkernel/go.sum
+      - run: go -C fingerprintkernel test -run "Test(Registry|UpdateKeepsLastGoodVersion|AutomaticUpdateSelectsAnInstallableArchitecture|FingerprintPreferencesRoundTrip)" ./...

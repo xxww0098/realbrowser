@@ -1,4 +1,4 @@
-package browserkernel
+package fingerprintkernel
 
 import (
 	"context"

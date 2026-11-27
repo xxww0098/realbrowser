@@ -1,6 +1,6 @@
 //go:build !windows
 
-package browserkernel
+package fingerprintkernel
 
 import (
 	"errors"
@@ -53,5 +53,5 @@ func terminateTree(pid int, grace time.Duration) error {
 			return nil
 		}
 	}
-	return fmt.Errorf("browserkernel: process group %d still active after SIGKILL", pid)
+	return fmt.Errorf("fingerprintkernel: process group %d still active after SIGKILL", pid)
 }

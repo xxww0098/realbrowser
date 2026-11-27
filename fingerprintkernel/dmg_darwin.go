@@ -1,6 +1,6 @@
 //go:build darwin
 
-package browserkernel
+package fingerprintkernel
 
 import (
 	"context"
@@ -32,7 +32,7 @@ func unpackDMG(ctx context.Context, dmgPath, destDir string) (string, error) {
 		return "", fmt.Errorf("fpchromium: create install dir: %w", err)
 	}
 
-	mountDir, err := os.MkdirTemp("", "browserkernel-dmg-*")
+	mountDir, err := os.MkdirTemp("", "fingerprintkernel-dmg-*")
 	if err != nil {
 		return "", fmt.Errorf("fpchromium: create dmg mount point: %w", err)
 	}
@@ -68,7 +68,7 @@ func unpackDMG(ctx context.Context, dmgPath, destDir string) (string, error) {
 	dstApp := filepath.Join(cleanDest, appBase)
 	ditto := exec.CommandContext(ctx, "ditto", srcApp, dstApp)
 	if out, err := ditto.CombinedOutput(); err != nil {
-		return "", fmt.Errorf("browserkernel: copy %s: %w (%s)", appBase, err, strings.TrimSpace(string(out)))
+		return "", fmt.Errorf("fingerprintkernel: copy %s: %w (%s)", appBase, err, strings.TrimSpace(string(out)))
 	}
 	exe := NormalizeBinaryPath("darwin", dstApp)
 	rel, err := filepath.Rel(dstApp, exe)
@@ -76,7 +76,7 @@ func unpackDMG(ctx context.Context, dmgPath, destDir string) (string, error) {
 		return "", err
 	}
 	if _, ok := ManagedExecutable(dstApp, rel); !ok {
-		return "", fmt.Errorf("browserkernel: installed bundle %s missing executable", appBase)
+		return "", fmt.Errorf("fingerprintkernel: installed bundle %s missing executable", appBase)
 	}
 	if fi, err := os.Stat(exe); err == nil && fi.Mode().Perm()&0o111 == 0 {
 		_ = os.Chmod(exe, fi.Mode().Perm()|0o755)

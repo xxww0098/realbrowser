@@ -1,6 +1,6 @@
 //go:build windows
 
-package browserkernel
+package fingerprintkernel
 
 import (
 	"errors"
@@ -28,7 +28,7 @@ func signalTree(pid int, sig syscall.Signal) error {
 	cmd := exec.Command("taskkill", args...)
 	ConfigureCommand(cmd, PrivateDriver)
 	if out, err := cmd.CombinedOutput(); err != nil {
-		return fmt.Errorf("browserkernel: taskkill: %w (%s)", err, out)
+		return fmt.Errorf("fingerprintkernel: taskkill: %w (%s)", err, out)
 	}
 	return nil
 }

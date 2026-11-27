@@ -1,4 +1,4 @@
-package browserkernel
+package fingerprintkernel
 
 import (
 	"bytes"
@@ -11,6 +11,7 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"slices"
 	"strings"
 	"time"
 )
@@ -48,7 +49,7 @@ func (m *KernelManager) FetchLatestRelease(ctx context.Context) (*ReleaseInfo, e
 	return m.fetchRelease(ctx, false)
 }
 
-// FetchInstallableRelease chooses stable releases with an archive the host can install.
+// FetchInstallableRelease chooses the highest stable Chromium version with an archive the host can install.
 func (m *KernelManager) FetchInstallableRelease(ctx context.Context) (*ReleaseInfo, error) {
 	return m.fetchRelease(ctx, true)
 }
@@ -63,26 +64,22 @@ func (m *KernelManager) fetchRelease(ctx context.Context, installable bool) (*Re
 			return nil, err
 		}
 		best, matched := m.pickRelease(rels, installable)
-		if matched {
+		if matched && !installable {
 			return best, nil
 		}
-		// Optional fallback to a custom ReleasesAPIURL or derived /releases?per_page=20
-		// when LatestAPIURL was customized. Never leak out to the default live GitHub
-		// UpstreamReleasesAPI when LatestAPIURL points at a test server or mirror.
+		// A mirror's latest publication can be a backport. Compare versions from
+		// its own release list when available.
 		listURL := ""
 		if m.ReleasesAPIURL != "" && m.ReleasesAPIURL != UpstreamReleasesAPI {
 			listURL = m.ReleasesAPIURL
 		} else if strings.HasSuffix(m.LatestAPIURL, "/releases/latest") {
 			listURL = strings.TrimSuffix(m.LatestAPIURL, "/latest") + "?per_page=20"
 		}
-		if listURL != "" {
+		if listURL != "" && listURL != m.LatestAPIURL {
 			if listRels, lerr := m.fetchReleasePayload(ctx, listURL); lerr == nil {
-				if fallbackBest, ok := m.pickRelease(listRels, installable); ok {
-					if best != nil && best.TagName != "" && best.TagName != fallbackBest.TagName {
-						fallbackBest.LatestTag = best.TagName
-					}
-					return fallbackBest, nil
-				}
+				best, _ = m.pickRelease(append(rels, listRels...), installable)
+			} else if ctx.Err() != nil {
+				return nil, ctx.Err()
 			}
 		}
 		if best != nil {
@@ -112,9 +109,17 @@ func (m *KernelManager) fetchRelease(ctx context.Context, installable bool) (*Re
 func (m *KernelManager) pickRelease(releases []ReleaseInfo, installable bool) (*ReleaseInfo, bool) {
 	goos, goarch := m.goos(), m.goarch()
 	var candidates []ReleaseInfo
+	versions := make(map[string][]int)
 	for _, r := range releases {
 		if m.AcceptRelease != nil && !m.AcceptRelease(r.TagName) {
 			continue
+		}
+		if installable {
+			version, err := versionParts(r.TagName)
+			if err != nil {
+				continue
+			}
+			versions[r.TagName] = version
 		}
 		r.Matched = nil
 		if installable || m.ArchiveSuffix != "" {
@@ -133,6 +138,11 @@ func (m *KernelManager) pickRelease(releases []ReleaseInfo, installable bool) (*
 			}
 		}
 		candidates = append(candidates, r)
+	}
+	if installable {
+		slices.SortStableFunc(candidates, func(a, b ReleaseInfo) int {
+			return slices.Compare(versions[b.TagName], versions[a.TagName])
+		})
 	}
 	return pickCompatibleRelease(candidates, goos, goarch)
 }
@@ -618,7 +628,7 @@ func (m *KernelManager) DownloadRelease(ctx context.Context, asset ReleaseAsset,
 func (a ReleaseAsset) SaveDownload(ctx context.Context, dir string, fetch func(path string) error) (string, error) {
 	name := strings.TrimSpace(a.Name)
 	if name == "" || name == "." || !filepath.IsLocal(name) || strings.ContainsAny(name, "/\\:") {
-		return "", fmt.Errorf("browserkernel: invalid release filename %q", name)
+		return "", fmt.Errorf("fingerprintkernel: invalid release filename %q", name)
 	}
 	if err := ctx.Err(); err != nil {
 		return "", err

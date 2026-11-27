@@ -1,4 +1,4 @@
-package browserkernel
+package fingerprintkernel
 
 import (
 	"archive/zip"
@@ -37,13 +37,22 @@ func TestUpdateKeepsLastGoodVersion(t *testing.T) {
 			_, _ = w.Write(buf.Bytes())
 			return
 		}
-		_ = json.NewEncoder(w).Encode([]ReleaseInfo{{TagName: tag, Assets: []ReleaseAsset{{Name: "chromium_windows_x64.zip", DownloadURL: srv.URL + "/asset", Digest: "sha256:" + digest}}}})
+		assets := []ReleaseAsset{{Name: "chromium_windows_x64.zip", DownloadURL: srv.URL + "/asset", Digest: "sha256:" + digest}}
+		backport := ReleaseInfo{TagName: "147.9.0.8", Assets: assets}
+		if r.URL.Path == "/releases/latest" {
+			_ = json.NewEncoder(w).Encode(backport)
+			return
+		}
+		_ = json.NewEncoder(w).Encode([]ReleaseInfo{backport, {TagName: tag, Assets: assets}})
 	}))
 	defer srv.Close()
 	m := KernelManager{GOOS: "windows", GOARCH: "amd64", HTTPClient: srv.Client(), ReleasesAPIURL: srv.URL}
 	dir := t.TempDir()
-	if available, err := m.CheckUpdate(t.Context(), "148.0.0.1"); err != nil || available != tag || downloads != 0 {
-		t.Fatalf("check: %q %v", available, err)
+	for _, url := range []string{"", srv.URL + "/releases/latest"} {
+		m.LatestAPIURL = url
+		if available, err := m.CheckUpdate(t.Context(), "148.0.0.1"); err != nil || available != tag || downloads != 0 {
+			t.Fatalf("check: %q %v", available, err)
+		}
 	}
 	old, changed, err := m.Update(t.Context(), dir, "148.0.0.1", nil)
 	if err != nil || !changed || old.Version != tag {
@@ -80,18 +89,24 @@ func TestUpdateKeepsLastGoodVersion(t *testing.T) {
 }
 
 func TestFingerprintPreferencesRoundTrip(t *testing.T) {
-	dir := filepath.Join(t.TempDir(), "profile")
-	f, err := ReadProfile(dir)
+	dir := t.TempDir()
+	f, err := ReadProfile(filepath.Join(dir, "new"))
 	if err != nil || f.Lang != "" {
 		t.Fatalf("legacy defaults: %+v, %v", f, err)
 	}
-	f.Lang, f.Timezone, f.WindowWidth, f.WindowHeight = "en-GB", "Europe/London", 720, 480
+	if err := os.WriteFile(filepath.Join(dir, ".browserkernel.json"), []byte(`{"lang":"en-GB"}`), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	if f, err = ReadProfile(dir); err != nil || f.Lang != "en-GB" {
+		t.Fatalf("existing profile: %+v, %v", f, err)
+	}
+	f.Timezone, f.WindowWidth, f.WindowHeight = "Europe/London", 720, 480
 	f.ColorScheme = ColorSchemeDark
 	if err = WriteProfile(dir, f); err != nil {
 		t.Fatal(err)
 	}
 	got, err := ReadProfile(dir)
-	if err != nil || got.Timezone != f.Timezone || got.WindowWidth != 720 || got.ColorScheme != ColorSchemeDark {
+	if err != nil || got.Lang != "en-GB" || got.Timezone != f.Timezone || got.WindowWidth != 720 || got.ColorScheme != ColorSchemeDark {
 		t.Fatalf("read preferences: %+v %v", got, err)
 	}
 	f.WindowHeight = -1
@@ -104,14 +119,20 @@ func TestFingerprintPreferencesRoundTrip(t *testing.T) {
 }
 
 func TestAutomaticUpdateSelectsAnInstallableArchitecture(t *testing.T) {
+	win64 := []ReleaseAsset{{Name: "chromium_windows_x64.zip"}}
 	releases := []ReleaseInfo{
 		{TagName: "153", Assets: []ReleaseAsset{{Name: "chromium_windows_x64.exe"}}},
+		{TagName: "latest-build", Assets: win64},
+		{TagName: "150.0.9", Assets: win64},
+		{TagName: "154", Draft: true, Assets: win64},
+		{TagName: "155", Prerelease: true, Assets: win64},
 		{TagName: "152", Assets: []ReleaseAsset{{Name: "chromium_windows_arm64.zip"}}},
-		{TagName: "151", Assets: []ReleaseAsset{{Name: "chromium_windows_x64.zip"}, {Name: "SHA256SUMS", DownloadURL: "https://example.test/sums"}}},
+		{TagName: "151.0.2", Assets: win64},
+		{TagName: "v151.0.10", Assets: []ReleaseAsset{{Name: "chromium_windows_x64.zip"}, {Name: "SHA256SUMS", DownloadURL: "https://example.test/sums"}}},
 	}
 	m := KernelManager{GOOS: "windows", GOARCH: "amd64"}
 	auto, ok := m.pickRelease(releases, true)
-	if !ok || auto.TagName != "151" || auto.Matched.ChecksumURL == "" {
+	if !ok || auto.TagName != "v151.0.10" || auto.LatestTag != "153" || auto.Matched.ChecksumURL == "" {
 		t.Fatalf("automatic candidate = %+v", auto)
 	}
 	manual, ok := m.pickRelease(releases, false)

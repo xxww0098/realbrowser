@@ -1,6 +1,6 @@
 //go:build !darwin
 
-package browserkernel
+package fingerprintkernel
 
 import (
 	"context"

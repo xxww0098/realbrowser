@@ -1,4 +1,4 @@
-package browserkernel
+package fingerprintkernel
 
 import (
 	"context"
@@ -56,7 +56,7 @@ func installArchive(ctx context.Context, archive, format, dest string) (string, 
 		return "", err
 	}
 	if strings.TrimSpace(dest) == "" {
-		return "", errors.New("browserkernel: install directory required")
+		return "", errors.New("fingerprintkernel: install directory required")
 	}
 	if err := os.MkdirAll(dest, 0o700); err != nil {
 		return "", err
@@ -81,7 +81,7 @@ func installArchive(ctx context.Context, archive, format, dest string) (string, 
 		_ = ClearMacQuarantine(ctx, exe)
 		exe, err = filepath.Rel(payload, exe)
 		if err != nil || !filepath.IsLocal(exe) {
-			return "", errors.New("browserkernel: invalid installed executable")
+			return "", errors.New("fingerprintkernel: invalid installed executable")
 		}
 		exe = filepath.Join(dest, exe)
 	}
@@ -100,7 +100,7 @@ func installArchive(ctx context.Context, archive, format, dest string) (string, 
 			return "", err
 		}
 		if strings.HasPrefix(strings.ToLower(name), ".install") || strings.EqualFold(target, archiveAbs) {
-			return "", fmt.Errorf("browserkernel: reserved install path %q", name)
+			return "", fmt.Errorf("fingerprintkernel: reserved install path %q", name)
 		}
 	}
 	lock, err := AcquireInstallLock(ctx, dest, nil)
@@ -136,7 +136,7 @@ func installArchive(ctx context.Context, archive, format, dest string) (string, 
 				return nil
 			}
 			if current.IsDir() != ent.IsDir() {
-				return fmt.Errorf("browserkernel: conflicting file type at %s", name)
+				return fmt.Errorf("fingerprintkernel: conflicting file type at %s", name)
 			}
 			old := filepath.Join(previous, name)
 			if err := root.MkdirAll(filepath.Dir(old), 0o700); err != nil {
@@ -172,7 +172,7 @@ func installArchive(ctx context.Context, archive, format, dest string) (string, 
 	}
 	if restore != nil {
 		cleanup = false
-		return "", errors.Join(err, fmt.Errorf("browserkernel: recover previous files from %s: %w", filepath.Join(dest, previous), restore))
+		return "", errors.Join(err, fmt.Errorf("fingerprintkernel: recover previous files from %s: %w", filepath.Join(dest, previous), restore))
 	}
 	return "", err
 }

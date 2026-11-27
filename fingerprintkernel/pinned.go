@@ -1,4 +1,4 @@
-package browserkernel
+package fingerprintkernel
 
 import (
 	"context"
@@ -66,7 +66,7 @@ func VerifyFileSHA256(ctx context.Context, path, expectedHex string) error {
 	}
 	got := hex.EncodeToString(h.Sum(nil))
 	if !strings.EqualFold(got, strings.TrimSpace(expectedHex)) {
-		return fmt.Errorf("browserkernel: sha256 mismatch (got %s, want %s)", got, expectedHex)
+		return fmt.Errorf("fingerprintkernel: sha256 mismatch (got %s, want %s)", got, expectedHex)
 	}
 	return nil
 }

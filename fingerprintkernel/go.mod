@@ -1,4 +1,4 @@
-module github.com/xxww0098/realbrowser/browserkernel
+module github.com/xxww0098/realbrowser/fingerprintkernel
 
 go 1.27.3
 

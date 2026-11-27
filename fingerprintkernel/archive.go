@@ -1,4 +1,4 @@
-package browserkernel
+package fingerprintkernel
 
 import (
 	"archive/tar"
@@ -34,7 +34,7 @@ type archiveOutput struct {
 func (out *archiveOutput) name(raw string, allowWrapperOnly bool) (string, error) {
 	out.entries++
 	if out.entries > maxArchiveEntries {
-		return "", errors.New("browserkernel: archive exceeds maximum entry count")
+		return "", errors.New("fingerprintkernel: archive exceeds maximum entry count")
 	}
 	raw = strings.ReplaceAll(raw, "\\", "/")
 	for strings.HasPrefix(raw, "./") {
@@ -45,7 +45,7 @@ func (out *archiveOutput) name(raw string, allowWrapperOnly bool) (string, error
 	}
 	name := filepath.FromSlash(raw)
 	if !filepath.IsLocal(name) || strings.Contains(strings.SplitN(raw, "/", 2)[0], ":") {
-		return "", fmt.Errorf("browserkernel: invalid archive path %q", raw)
+		return "", fmt.Errorf("fingerprintkernel: invalid archive path %q", raw)
 	}
 	if out.pinned {
 		_, rel, _ := strings.Cut(raw, "/")
@@ -53,7 +53,7 @@ func (out *archiveOutput) name(raw string, allowWrapperOnly bool) (string, error
 			return "", nil
 		}
 		if !filepath.IsLocal(filepath.FromSlash(rel)) {
-			return "", fmt.Errorf("browserkernel: missing or invalid path inside archive directory %q", raw)
+			return "", fmt.Errorf("fingerprintkernel: missing or invalid path inside archive directory %q", raw)
 		}
 		name = filepath.FromSlash(rel)
 	}
@@ -62,7 +62,7 @@ func (out *archiveOutput) name(raw string, allowWrapperOnly bool) (string, error
 
 func (out *archiveOutput) file(ctx context.Context, name string, size int64, mode os.FileMode, src io.Reader) error {
 	if size < 0 || size > maxArchiveFileBytes || size > out.remaining {
-		return errors.New("browserkernel: archive exceeds maximum extraction size limit")
+		return errors.New("fingerprintkernel: archive exceeds maximum extraction size limit")
 	}
 	if mode == 0 {
 		mode = 0o644
@@ -84,7 +84,7 @@ func (out *archiveOutput) file(ctx context.Context, name string, size int64, mod
 		return err
 	}
 	if written != size {
-		return fmt.Errorf("browserkernel: wrong size for archive entry %q", name)
+		return fmt.Errorf("fingerprintkernel: wrong size for archive entry %q", name)
 	}
 	out.remaining -= written
 	if sc := scoreExtractedExecutable(name); sc > out.score {
@@ -109,7 +109,7 @@ func (out *archiveOutput) symlink(name, target string) error {
 	target = strings.TrimSpace(target)
 	if target == "" || strings.HasPrefix(target, "/") || strings.ContainsAny(target, "\\:") || filepath.IsAbs(target) ||
 		!filepath.IsLocal(filepath.Join(filepath.Dir(name), filepath.FromSlash(target))) {
-		return fmt.Errorf("browserkernel: invalid archive link %q -> %q", name, target)
+		return fmt.Errorf("fingerprintkernel: invalid archive link %q -> %q", name, target)
 	}
 	if err := out.root.MkdirAll(filepath.Dir(name), 0o700); err != nil {
 		return err
@@ -159,7 +159,7 @@ func (out *archiveOutput) zip(ctx context.Context, archive string) error {
 				err = out.symlink(name, string(link))
 			}
 		default:
-			err = fmt.Errorf("browserkernel: unsupported zip entry %q", name)
+			err = fmt.Errorf("fingerprintkernel: unsupported zip entry %q", name)
 		}
 		if err = errors.Join(err, r.Close()); err != nil {
 			return err
@@ -191,7 +191,7 @@ func (out *archiveOutput) tarXZ(ctx context.Context, archive string) error {
 			return err
 		}
 		if strings.Contains(h.Name, "\\") {
-			return fmt.Errorf("browserkernel: invalid tar path %q", h.Name)
+			return fmt.Errorf("fingerprintkernel: invalid tar path %q", h.Name)
 		}
 		name, err := out.name(h.Name, h.Typeflag == tar.TypeDir)
 		if err != nil {
@@ -210,11 +210,11 @@ func (out *archiveOutput) tarXZ(ctx context.Context, archive string) error {
 		case tar.TypeLink:
 			target := filepath.FromSlash(h.Linkname)
 			if out.pinned || !filepath.IsLocal(target) {
-				return fmt.Errorf("browserkernel: invalid hard link %q", h.Name)
+				return fmt.Errorf("fingerprintkernel: invalid hard link %q", h.Name)
 			}
 			info, err := out.root.Lstat(target)
 			if err != nil || !info.Mode().IsRegular() {
-				return fmt.Errorf("browserkernel: invalid hard link target %q", target)
+				return fmt.Errorf("fingerprintkernel: invalid hard link target %q", target)
 			}
 			if err := out.root.MkdirAll(filepath.Dir(name), 0o700); err != nil {
 				return err
@@ -223,7 +223,7 @@ func (out *archiveOutput) tarXZ(ctx context.Context, archive string) error {
 				return err
 			}
 		default:
-			return fmt.Errorf("browserkernel: unsupported tar entry %q", name)
+			return fmt.Errorf("fingerprintkernel: unsupported tar entry %q", name)
 		}
 		if err != nil {
 			return err
@@ -256,7 +256,7 @@ func unpack(ctx context.Context, archive, formatName, dest string, pinned bool) 
 	case strings.HasSuffix(strings.ToLower(formatName), ".tar.xz"):
 		err = out.tarXZ(ctx, archive)
 	default:
-		return "", fmt.Errorf("browserkernel: unsupported archive %q", formatName)
+		return "", fmt.Errorf("fingerprintkernel: unsupported archive %q", formatName)
 	}
 	if err != nil {
 		return "", err
@@ -291,7 +291,7 @@ func (b PinnedBuild) Unpack(ctx context.Context, archive, dest string) error {
 		return err
 	}
 	if _, ok := ManagedExecutable(dest, filepath.FromSlash(b.RelExe)); !ok {
-		return fmt.Errorf("browserkernel: archive is missing %s", b.RelExe)
+		return fmt.Errorf("fingerprintkernel: archive is missing %s", b.RelExe)
 	}
 	return nil
 }

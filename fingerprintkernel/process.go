@@ -1,5 +1,5 @@
-// Package browserkernel manages fingerprint-chromium releases and child processes.
-package browserkernel
+// Package fingerprintkernel manages fingerprint-chromium releases and child processes.
+package fingerprintkernel
 
 import (
 	"errors"
@@ -68,14 +68,14 @@ func (p *Process) Terminate(grace time.Duration) error {
 	case <-p.done:
 		return nil
 	case <-time.After(2 * DefaultKillGrace):
-		return fmt.Errorf("browserkernel: pid %d was not reaped", p.PID())
+		return fmt.Errorf("fingerprintkernel: pid %d was not reaped", p.PID())
 	}
 }
 
 // TerminateTree stops a browser process group, escalating after grace.
 func TerminateTree(pid int, grace time.Duration) error {
 	if pid <= 0 {
-		return errors.New("browserkernel: invalid process id")
+		return errors.New("fingerprintkernel: invalid process id")
 	}
 	if grace <= 0 {
 		grace = DefaultKillGrace
