@@ -4,13 +4,52 @@ RealBrowser 维护的独立 Go 模块，供 RealBrowser 的 Go 桌面工程和�
 
 模块可以在 RealBrowser 仓库使用 `fingerprintkernel/vX.Y.Z` 标签独立发布。图来在 `go.mod` 锁定模块版本，CI 按版本标签或 Go 伪版本对应的提交检出。原 `browserkernel` 模块的 `v0.1.0` 仍可按原路径获取。迁移时将 Go 导入路径的最后一段及包名改为 `fingerprintkernel`，现有指纹配置可以直接沿用。
 
+## 接入
+
+应用使用自己的内核目录和资料目录。打开一个环境只需调用 `Open`。第一次打开时，模块会准备浏览器和指纹资料。下次打开会复用本地安装和已保存的资料。
+
+```go
+browser := fingerprintkernel.ManagedBrowser{Dir: kernelDir}
+process, err := browser.Open(ctx, profileDir, "about:blank")
+if err != nil {
+    return err
+}
+exitCode := process.Wait() // 等待窗口退出
+```
+
+| 应用要做的事 | 调用 |
+| --- | --- |
+| 提前下载安装浏览器 | `browser.Ensure(ctx, progress)` |
+| 升级浏览器 | `browser.Update(ctx, progress)` |
+| 打开一个指纹环境 | `browser.Open(ctx, profileDir, urls...)` |
+| 读取或编辑完整指纹 | `ReadProfile(profileDir)`、`EditProfile(ctx, profileDir, edit)` |
+| 编辑语言、时区、窗口与配色 | `ReadDisplayPreferences(profileDir)`、`prefs.Save(ctx, profileDir)` |
+| 使用模板创建指纹 | `preset.Fingerprint()` |
+| 在 SQLite 等存储中写回指纹 | 在事务内调用 `MergeFingerprintJSON(original, spec)` |
+| 使用自有的浏览器启动器 | `LaunchOptions.Prepare(ctx, nil)` 返回启动参数和进程环境，并写入 Chromium 偏好 |
+
+`Ensure` 在已有安装时可以离线使用。首次安装优先使用当前平台兼容的内置版本，其他平台会查找兼容的稳定发行包。下载的包必须通过 SHA-256 校验才能切换为当前版本。离线安装可指定 `Pinned.Archive`。应用已有安装可在 `Base` 中提供经过验证的路径和版本。进度回调可以传 `nil`。
+
+修改一个字段时，回调会收到最新的指纹数据。返回错误会取消整次修改。
+
+```go
+err := fingerprintkernel.EditProfile(ctx, profileDir, func(f *fingerprintkernel.FingerprintSpec) error {
+    f.Lang = "zh-CN"
+    f.Timezone = "Asia/Shanghai"
+    return nil
+})
+```
+
+## 按需集成
+
 | 用途 | 接口 |
 | --- | --- |
 | 查阅发行信息、检查可确认安装的更新 | `KernelManager.FetchLatestRelease`、`FetchInstallableRelease`、`AvailableUpdate`、`CheckUpdate` |
 | 下载、校验、安装和切换 | `KernelManager.Update`、`ActivateRelease`、`ActiveRelease` |
 | Node 宿主的镜像测速、分段下载和续传 | `downloader/download-watch.mjs` 的 `downloadArchive` |
 | 使用锁定的首次安装包 | `PinnedRelease`、`PinnedBuild.Asset`、`PinnedBuild.Unpack` |
-| 编辑和持久化指纹详情 | `FingerprintSpec`、`ImportFingerprintJSON`、`ExportFingerprintJSON`、`MergeFingerprintJSON`、`ReadProfile`、`EditProfile`、`WriteProfile` |
+| 编辑和持久化指纹详情 | `FingerprintSpec`、`ScreenSpec`、`ImportFingerprintJSON`、`ExportFingerprintJSON`、`MergeFingerprintJSON`、`ReadProfile`、`EditProfile`、`WriteProfile` |
+| 生成和持久化账号随机指纹 | `EnsureProfile`、`GenerateProfile`、`DefaultScreenFor`、`EnsureOptions` |
 | 启动、等待、终止子进程和登记活动实例 | `StartProcess`、`Process`、`Registry` |
 
 需要用户确认更新时，调用 `mgr.AvailableUpdate(ctx, current)`。返回 `nil, nil` 表示没有可用更新，首次安装可将 `current` 留空。将返回的发行信息保存在宿主，用 `release.TagName` 显示版本。用户确认后把同一份 `release` 传给 `mgr.ActivateRelease(ctx, dir, current, release, progress)`。预览阶段会读取必要的 SHA-256 校验文件，保留摘要，到安装时才下载安装包。即使上游清单随后发布了新版，确认的版本、文件和摘要仍由这次检查决定。只显示版本号可以继续用 `CheckUpdate`，后台自动升级可以直接调用 `Update`。
@@ -23,6 +62,6 @@ RealBrowser 维护的独立 Go 模块，供 RealBrowser 的 Go 桌面工程和�
 
 用 SQLite 等存储的宿主可以在一个事务里读出原始 JSON，调用 `MergeFingerprintJSON(original, spec)`，再写回返回的字符串。`spec` 提供全部已知字段，清空的可选字段会被移除。原始 JSON 中的扩展字段会保留。传入空字符串可以创建新文档。
 
-在本目录运行 `go test -race ./...` 可验证下载、解压、指纹资料与版本切换。运行 `node --test downloader/*.test.mjs` 可单独验证多镜像传输。
+在本目录运行 `go test -race ./...` 可验证安装、升级、编辑和进程管理。运行 `node --test downloader/*.test.mjs driver/*.test.mjs` 可验证多镜像传输和 Node 驱动使用的指纹格式。
 
 要验证受管浏览器能渲染正文，可将 `REALBROWSER_TEST_BINARY` 设为浏览器可执行文件的绝对路径，在本目录运行 `go test -count=1 -run '^TestManagedChromiumRendersLocalContent$' .`。macOS 还需将 `REALBROWSER_TEST_LAUNCHER` 设为临时资料目录专用的 `chromium-test` 启动器路径。测试通过本机 HTTP 服务分别打开动态正文和 403 错误页，每次使用独立临时资料目录。

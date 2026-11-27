@@ -83,7 +83,36 @@ func (m *KernelManager) ActivateRelease(ctx context.Context, dir, current string
 	if m.AcceptRelease != nil && !m.AcceptRelease(rel.TagName) {
 		return InstalledRelease{}, false, errors.New("内核版本与当前应用不兼容")
 	}
-	target, err := versionParts(rel.TagName)
+	return activate(ctx, dir, current, rel.TagName, func(stage string) (string, error) {
+		asset := *rel.Matched
+		if asset.emptyXZArchive() {
+			return "", errors.New("发行包过小，无法包含浏览器")
+		}
+		if !asset.hasChecksum() {
+			return "", errors.New("发行包缺少 SHA-256 校验值")
+		}
+		archive, err := m.DownloadRelease(ctx, asset, stage, progress)
+		if err != nil {
+			return "", err
+		}
+		exe, err := InstallReleaseArchive(ctx, archive, stage)
+		if err != nil {
+			return "", err
+		}
+		if exe == "" {
+			return "", errors.New("发行包中没有可启动的浏览器")
+		}
+		if exe != archive {
+			if err := os.Remove(archive); err != nil {
+				return "", err
+			}
+		}
+		return exe, nil
+	})
+}
+
+func activate(ctx context.Context, dir, current, tag string, install func(string) (string, error)) (InstalledRelease, bool, error) {
+	target, err := versionParts(tag)
 	if err != nil {
 		return InstalledRelease{}, false, err
 	}
@@ -113,13 +142,6 @@ func (m *KernelManager) ActivateRelease(ctx context.Context, dir, current string
 			return latest, false, nil
 		}
 	}
-	asset := *rel.Matched
-	if asset.emptyXZArchive() {
-		return InstalledRelease{}, false, errors.New("发行包过小，无法包含浏览器")
-	}
-	if !asset.hasChecksum() {
-		return InstalledRelease{}, false, errors.New("发行包缺少 SHA-256 校验值")
-	}
 	versions := filepath.Join(dir, "versions")
 	if err := os.MkdirAll(versions, 0o700); err != nil {
 		return InstalledRelease{}, false, err
@@ -137,21 +159,9 @@ func (m *KernelManager) ActivateRelease(ctx context.Context, dir, current string
 			_ = os.RemoveAll(stage)
 		}
 	}()
-	archive, err := m.DownloadRelease(ctx, asset, stage, progress)
+	exe, err := install(stage)
 	if err != nil {
 		return InstalledRelease{}, false, err
-	}
-	exe, err := InstallReleaseArchive(ctx, archive, stage)
-	if err != nil {
-		return InstalledRelease{}, false, err
-	}
-	if exe == "" {
-		return InstalledRelease{}, false, errors.New("发行包中没有可启动的浏览器")
-	}
-	if exe != archive {
-		if err := os.Remove(archive); err != nil {
-			return InstalledRelease{}, false, err
-		}
 	}
 	path, err := filepath.Rel(dir, exe)
 	if err != nil {
@@ -163,7 +173,7 @@ func (m *KernelManager) ActivateRelease(ctx context.Context, dir, current string
 	if err := ctx.Err(); err != nil {
 		return InstalledRelease{}, false, err
 	}
-	data, err := json.Marshal(activation{Version: rel.TagName, Path: filepath.ToSlash(path)})
+	data, err := json.Marshal(activation{Version: tag, Path: filepath.ToSlash(path)})
 	if err != nil {
 		return InstalledRelease{}, false, err
 	}
@@ -171,7 +181,7 @@ func (m *KernelManager) ActivateRelease(ctx context.Context, dir, current string
 		return InstalledRelease{}, false, err
 	}
 	activated = true
-	return InstalledRelease{Version: rel.TagName, Executable: exe}, true, nil
+	return InstalledRelease{Version: tag, Executable: exe}, true, nil
 }
 
 func writeAtomic(dir, name string, data []byte) error {

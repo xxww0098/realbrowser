@@ -1,6 +1,7 @@
 package fingerprintkernel
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"errors"
@@ -79,6 +80,10 @@ func EditProfile(ctx context.Context, dir string, edit func(*FingerprintSpec) er
 	if err := edit(&f); err != nil {
 		return err
 	}
+	return saveProfileLocked(ctx, dir, f, original)
+}
+
+func saveProfileLocked(ctx context.Context, dir string, f FingerprintSpec, original []byte) error {
 	if err := f.validateDisplay(); err != nil {
 		return err
 	}
@@ -118,13 +123,19 @@ func retainProfileExtras(original, encoded []byte, schema reflect.Type) ([]byte,
 	for i := 0; i < schema.NumField(); i++ {
 		field := schema.Field(i)
 		name, _, _ := strings.Cut(field.Tag.Get("json"), ",")
+		fieldType := field.Type
+		if fieldType.Kind() == reflect.Pointer {
+			fieldType = fieldType.Elem()
+		}
 		for key, value := range old {
 			if !strings.EqualFold(key, name) {
 				continue
 			}
 			delete(old, key)
-			if field.Type.Kind() == reflect.Struct && next[name] != nil {
-				merged, err := retainProfileExtras(value, next[name], field.Type)
+			if fieldType.Kind() == reflect.Struct && next[name] != nil &&
+				!bytes.Equal(bytes.TrimSpace(value), []byte("null")) &&
+				!bytes.Equal(bytes.TrimSpace(next[name]), []byte("null")) {
+				merged, err := retainProfileExtras(value, next[name], fieldType)
 				if err != nil {
 					return nil, err
 				}

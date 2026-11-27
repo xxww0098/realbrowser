@@ -57,20 +57,40 @@ func TestManagedChromiumRendersLocalContent(t *testing.T) {
 	server := httptest.NewServer(mux)
 	t.Cleanup(server.Close)
 
-	args := []string{
-		"--user-data-dir=" + t.TempDir(), "--headless=new", "--no-first-run",
-		"--no-default-browser-check", "--disable-background-networking",
-		"--remote-debugging-address=127.0.0.1", "--remote-debugging-port=0",
-	}
+	profile := t.TempDir()
 	if runtime.GOOS == "darwin" {
-		args = append(args, "--use-mock-keychain")
+		// Let the test launcher verify and claim its empty directory before
+		// the kernel writes the test profile's preferences there.
+		probe := exec.CommandContext(t.Context(), launcher, browser, "--user-data-dir="+profile, "--use-mock-keychain", "--version")
+		if out, err := probe.CombinedOutput(); err != nil {
+			t.Fatalf("initialize isolated browser profile: %s: %v", out, err)
+		}
 	}
-	executable := browser
-	if launcher != "" {
-		executable, args = launcher, append([]string{browser}, args...)
+	if err := EditProfile(t.Context(), profile, func(f *FingerprintSpec) error {
+		f.Headless = true
+		return nil
+	}); err != nil {
+		t.Fatal(err)
 	}
-	cmd := exec.Command(executable, append(args, server.URL+"/catalog")...)
-	proc, err := StartProcess(cmd, DetachedBrowser)
+	installation := ManagedBrowser{Dir: t.TempDir(), Base: InstalledRelease{Executable: browser}}
+	var proc *Process
+	var err error
+	if launcher == "" {
+		proc, err = installation.Open(t.Context(), profile, server.URL+"/catalog")
+	} else {
+		cmd, prepErr := installation.openCommand(t.Context(), profile, []string{server.URL + "/catalog"})
+		if prepErr != nil {
+			t.Fatal(prepErr)
+		}
+		// The macOS test launcher accepts the executable first, then verifies
+		// that the final command uses the isolated profile and mock keychain.
+		args := []string{launcher, cmd.Path, "--disable-background-networking", "--remote-debugging-address=127.0.0.1"}
+		if runtime.GOOS == "darwin" {
+			args = append(args, "--use-mock-keychain")
+		}
+		cmd.Path, cmd.Args = launcher, append(args, cmd.Args[1:]...)
+		proc, err = StartProcess(cmd, DetachedBrowser)
+	}
 	if err != nil {
 		t.Fatal(err)
 	}

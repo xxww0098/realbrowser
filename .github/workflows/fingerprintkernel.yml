@@ -28,7 +28,7 @@ jobs:
           export REALBROWSER_TEST_BINARY
           go -C fingerprintkernel test -short -race ./...
       - run: go -C fingerprintkernel vet ./...
-      - run: node --test fingerprintkernel/downloader/*.test.mjs
+      - run: node --test fingerprintkernel/downloader/*.test.mjs fingerprintkernel/driver/*.test.mjs
 
   windows:
     runs-on: windows-latest
@@ -40,4 +40,4 @@ jobs:
         with:
           go-version-file: fingerprintkernel/go.mod
           cache-dependency-path: fingerprintkernel/go.sum
-      - run: go -C fingerprintkernel test -run "Test(Registry|UpdateKeepsLastGoodVersion|AutomaticUpdate|AvailableUpdate|FingerprintPreferencesRoundTrip|MergeFingerprintJSON|Profile)" ./...
+      - run: go -C fingerprintkernel test -run "Test(DriverBrowser|ManagedBrowser|SharedProfileEditor|EnsureProfile|Registry|UpdateKeepsLastGoodVersion|AutomaticUpdate|AvailableUpdate|FingerprintPreferencesRoundTrip|MergeFingerprintJSON|Profile)" ./...

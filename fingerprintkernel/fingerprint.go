@@ -195,6 +195,54 @@ type PermissionsSpec struct {
 	HardwareGuard PermissionMode `json:"hardware_guard,omitempty"` // ""|"prompt"|"block" (blocks WebUSB/WebHID/WebBluetooth/WebSerial via *_guard)
 }
 
+// ScreenSpec describes the virtual desktop display and default window geometry
+// assigned to a profile. User-edited WindowWidth/WindowHeight override the
+// default window size at launch while preserving the screen preset.
+type ScreenSpec struct {
+	Width        int     `json:"width"`
+	Height       int     `json:"height"`
+	AvailTop     int     `json:"avail_top"`
+	AvailBottom  int     `json:"avail_bottom"`
+	DPR          float64 `json:"dpr"`
+	WindowWidth  int     `json:"window_width"`
+	WindowHeight int     `json:"window_height"`
+	WindowX      *int    `json:"window_x,omitempty"`
+	WindowY      *int    `json:"window_y,omitempty"`
+}
+
+// Validate checks ScreenSpec dimensions, scale factor, and optional window position.
+func (s ScreenSpec) Validate() error {
+	if s.Width < 1024 || s.Width > 7680 || s.Height < 720 || s.Height > 4320 {
+		return fmt.Errorf("fpchromium: screen dimensions %dx%d out of range", s.Width, s.Height)
+	}
+	if s.AvailTop < 0 || s.AvailBottom < 0 || s.AvailTop+s.AvailBottom >= s.Height {
+		return fmt.Errorf("fpchromium: invalid screen work area insets (%d, %d) for height %d", s.AvailTop, s.AvailBottom, s.Height)
+	}
+	switch s.DPR {
+	case 1, 1.25, 1.5, 2:
+	default:
+		return fmt.Errorf("fpchromium: unsupported screen dpr %v", s.DPR)
+	}
+	if s.WindowWidth < 1024 || s.WindowWidth > s.Width {
+		return fmt.Errorf("fpchromium: screen window_width %d out of range [1024, %d]", s.WindowWidth, s.Width)
+	}
+	maxWinH := s.Height - s.AvailTop - s.AvailBottom
+	if s.WindowHeight < 600 || s.WindowHeight > maxWinH {
+		return fmt.Errorf("fpchromium: screen window_height %d out of range [600, %d]", s.WindowHeight, maxWinH)
+	}
+	if (s.WindowX != nil) != (s.WindowY != nil) {
+		return errors.New("fpchromium: screen window_x and window_y must both be set")
+	}
+	if s.WindowX != nil {
+		maxX := s.Width - s.WindowWidth
+		maxY := s.Height - s.AvailBottom - s.WindowHeight
+		if *s.WindowX < 0 || *s.WindowX > maxX || *s.WindowY < s.AvailTop || *s.WindowY > maxY {
+			return fmt.Errorf("fpchromium: screen window position (%d, %d) out of work area", *s.WindowX, *s.WindowY)
+		}
+	}
+	return nil
+}
+
 // FingerprintSpec is the editable JSON representation of a browser profile.
 type FingerprintSpec struct {
 	Seed                 uint32          `json:"seed"`
@@ -203,6 +251,7 @@ type FingerprintSpec struct {
 	Brand                Brand           `json:"brand"`
 	BrandVersion         string          `json:"brand_version,omitempty"`
 	HardwareConcurrency  int             `json:"hardware_concurrency,omitempty"`
+	Screen               *ScreenSpec     `json:"screen,omitempty"`
 	Lang                 string          `json:"lang,omitempty"`
 	AcceptLang           string          `json:"accept_lang,omitempty"`
 	Timezone             string          `json:"timezone,omitempty"`
@@ -430,6 +479,11 @@ func (f FingerprintSpec) Validate() error {
 	}
 	if f.HardwareConcurrency < 0 || f.HardwareConcurrency > 128 {
 		return fmt.Errorf("fpchromium: hardware_concurrency %d out of range [0, 128]", f.HardwareConcurrency)
+	}
+	if f.Screen != nil {
+		if err := f.Screen.Validate(); err != nil {
+			return err
+		}
 	}
 	if f.WindowWidth < 0 || f.WindowHeight < 0 {
 		return errors.New("fpchromium: window dimensions must be non-negative")
