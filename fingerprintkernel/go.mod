@@ -1,6 +1,6 @@
 module github.com/xxww0098/realbrowser/fingerprintkernel
 
-go 1.27.3
+go 1.27.4
 
 require (
 	github.com/ulikunitz/xz v0.5.15

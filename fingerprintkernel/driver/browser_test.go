@@ -4,11 +4,11 @@ import (
 	"net/http"
 	"testing"
 
-	kernel "github.com/xxww0098/realbrowser/fingerprintkernel"
+	"github.com/xxww0098/realbrowser/fingerprintkernel/engine"
 )
 
 func TestDriverBrowserConfiguresPrivateTransport(t *testing.T) {
-	b, err := Browser(t.TempDir(), kernel.InstalledRelease{}, "http://127.0.0.1:3128")
+	b, err := Browser(t.TempDir(), engine.InstalledRelease{}, "http://127.0.0.1:3128")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -20,7 +20,7 @@ func TestDriverBrowserConfiguresPrivateTransport(t *testing.T) {
 	if b.Manager.AcceptRelease("v150.0.7871.186") || !b.Manager.AcceptRelease("151.0.0.1") {
 		t.Fatal("driver compatibility policy lost")
 	}
-	if _, err := Browser(t.TempDir(), kernel.InstalledRelease{}, "://"); err == nil {
+	if _, err := Browser(t.TempDir(), engine.InstalledRelease{}, "://"); err == nil {
 		t.Fatal("accepted invalid proxy")
 	}
 }

@@ -7,13 +7,14 @@ import (
 	"runtime"
 	"strings"
 
-	kernel "github.com/xxww0098/realbrowser/fingerprintkernel"
+	"github.com/xxww0098/realbrowser/fingerprintkernel/browser"
+	"github.com/xxww0098/realbrowser/fingerprintkernel/engine"
 )
 
 // Browser uses the archive format and releases compatible with the private
 // desktop driver. Its private HTTP transport uses the host proxy by default.
-func Browser(dir string, base kernel.InstalledRelease, proxy string) (kernel.ManagedBrowser, error) {
-	mgr := kernel.NewKernelManager("", "")
+func Browser(dir string, base engine.InstalledRelease, proxy string) (browser.ManagedBrowser, error) {
+	mgr := engine.NewKernelManager("", "")
 	// This upstream build crashes when the driver's renderer reads a canvas.
 	mgr.AcceptRelease = func(tag string) bool { return strings.TrimPrefix(tag, "v") != "150.0.7871.186" }
 	if runtime.GOOS == "linux" {
@@ -27,10 +28,12 @@ func Browser(dir string, base kernel.InstalledRelease, proxy string) (kernel.Man
 	if proxy != "" {
 		u, err := url.Parse(proxy)
 		if err != nil || u.Host == "" {
-			return kernel.ManagedBrowser{}, errors.New("invalid browser download proxy")
+			return browser.ManagedBrowser{}, errors.New("invalid browser download proxy")
 		}
 		clientTransport.Proxy = http.ProxyURL(u)
 	}
 	mgr.HTTPClient.Transport = clientTransport
-	return kernel.ManagedBrowser{Dir: dir, Base: base, Manager: mgr}, nil
+	b := browser.New(dir)
+	b.Base, b.Manager = base, mgr
+	return b, nil
 }
