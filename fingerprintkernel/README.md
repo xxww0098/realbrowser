@@ -10,12 +10,14 @@ RealBrowser 维护的独立 Go 模块，供 RealBrowser 的 Go 桌面工程和�
 | 下载、校验、安装和切换 | `KernelManager.Update`、`ActivateRelease`、`ActiveRelease` |
 | Node 宿主的镜像测速、分段下载和续传 | `downloader/download-watch.mjs` 的 `downloadArchive` |
 | 使用锁定的首次安装包 | `PinnedRelease`、`PinnedBuild.Asset`、`PinnedBuild.Unpack` |
-| 编辑和持久化指纹详情 | `FingerprintSpec`、`ImportFingerprintJSON`、`ExportFingerprintJSON`、`ReadProfile`、`WriteProfile` |
+| 编辑和持久化指纹详情 | `FingerprintSpec`、`ImportFingerprintJSON`、`ExportFingerprintJSON`、`ReadProfile`、`EditProfile`、`WriteProfile` |
 | 启动、等待、终止子进程和登记活动实例 | `StartProcess`、`Process`、`Registry` |
 
-有版本选择界面时，先获取发行版，再把选中的 `ReleaseInfo` 交给 `ActivateRelease`。后台自动升级可以直接调用 `Update`。检查和自动升级都从返回的稳定发行版中按 Chromium 版本号选择当前平台可安装的最高版本。更新要求发行包具有 SHA-256，校验成功才写入 `active.json`。版本保存在同一根目录的 `versions/` 下，已有进程可继续使用旧文件。已有安装的版本号可作为 `current` 参数传入，更新器会比较版本并避免降级。
+有版本选择界面时，先获取发行版，再把选中的 `ReleaseInfo` 交给 `ActivateRelease`。后台自动升级可以直接调用 `Update`。检查和自动升级都选择当前平台可安装、带 SHA-256 校验信息的最高稳定版本，跳过空的 XZ 归档。自动选包时，文件名须标明匹配的处理器架构。macOS 也接受标明 `universal` 或 `universal2` 的构建。模块内已锁定的构建可通过平台、版本、文件名和内置摘要确认。
 
-`ReadProfile` 和 `WriteProfile` 读写指定资料目录中的 `.browserkernel.json`。编辑部分字段时，先读取当前记录，再修改并保存。使用 SQLite 的宿主可直接保存同一个模型或使用其 JSON 接口。
+更新器校验下载内容后才写入 `active.json`。版本保存在同一根目录的 `versions/` 下，已有进程可继续使用旧文件。已有安装的版本号可作为 `current` 参数传入，更新器会比较版本并避免降级。
+
+`ReadProfile` 读取资料目录中的 `.browserkernel.json`。修改语言、时区等单项偏好时，使用 `EditProfile(ctx, dir, edit)`。它持有同一把文件锁读取最新配置并保存，回调返回错误会保留原文件。`WriteProfile` 可整份替换当前版本定义的字段。两种写法都会保留磁盘中较新版本写入的扩展字段，包括已知对象中的扩展字段。使用 SQLite 的宿主可直接保存同一个模型或使用其 JSON 接口。
 
 在本目录运行 `go test -race ./...` 可验证下载、解压、指纹资料与版本切换。运行 `node --test downloader/*.test.mjs` 可单独验证多镜像传输。
 

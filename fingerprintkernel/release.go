@@ -134,6 +134,12 @@ func (m *KernelManager) pickRelease(releases []ReleaseInfo, installable bool) (*
 						a.ChecksumURL = cs.DownloadURL
 					}
 				}
+				if installable {
+					var ok bool
+					if a, ok = a.forAutomaticUpdate(goos, goarch, r.TagName, r.Body); !ok {
+						continue
+					}
+				}
 				r.Assets = append(r.Assets, a)
 			}
 		}
@@ -145,6 +151,60 @@ func (m *KernelManager) pickRelease(releases []ReleaseInfo, installable bool) (*
 		})
 	}
 	return pickCompatibleRelease(candidates, goos, goarch)
+}
+
+func (a ReleaseAsset) forAutomaticUpdate(goos, goarch, tag, body string) (ReleaseAsset, bool) {
+	if a.DownloadURL == "" || a.emptyXZArchive() {
+		return a, false
+	}
+	pinned, ok := PinnedRelease(goos, goarch)
+	if ok && strings.TrimPrefix(tag, "v") == PinnedVersion && a.Name == pinned.File {
+		if a.SHA256 != "" && NormalizeSHA256(a.SHA256) != pinned.SHA256 {
+			return a, false
+		}
+		if digest := NormalizeSHA256(a.Digest); digest != "" && digest != pinned.SHA256 {
+			return a, false
+		}
+		a.SHA256 = pinned.SHA256
+	} else if !matchesUpdateArchitecture(strings.ToLower(a.Name), goos, goarch) {
+		return a, false
+	}
+	if !a.hasChecksum() && a.SHA256 == "" {
+		a.SHA256, _ = parseReleaseBodySHA256(body, a.Name)
+	}
+	return a, a.hasChecksum()
+}
+
+func (a ReleaseAsset) emptyXZArchive() bool {
+	// An XZ stream of at most 32 bytes cannot contain a data block.
+	return a.Size > 0 && a.Size <= 32 && strings.HasSuffix(strings.ToLower(a.Name), ".tar.xz")
+}
+
+func matchesUpdateArchitecture(name, goos, goarch string) bool {
+	arm64, x64 := releaseArchitectures(name)
+	if arm64 || x64 {
+		return (goarch == "arm64" && arm64) || (goarch == "amd64" && x64)
+	}
+	if goos == "darwin" && (goarch == "arm64" || goarch == "amd64") {
+		parts := strings.FieldsFunc(name, func(c rune) bool { return c == '-' || c == '_' || c == '.' })
+		if slices.Contains(parts, "universal") || slices.Contains(parts, "universal2") {
+			return true
+		}
+	}
+	return false
+}
+
+func releaseArchitectures(lowerName string) (arm64, x64 bool) {
+	arm64 = strings.Contains(lowerName, "arm64") || strings.Contains(lowerName, "aarch64")
+	x64 = strings.Contains(lowerName, "x64") || strings.Contains(lowerName, "x86_64") || strings.Contains(lowerName, "amd64") || strings.Contains(lowerName, "win64")
+	return arm64, x64
+}
+
+func (a ReleaseAsset) hasChecksum() bool {
+	if strings.TrimSpace(a.SHA256) != "" {
+		return NormalizeSHA256(a.SHA256) != ""
+	}
+	return NormalizeSHA256(a.Digest) != "" || strings.TrimSpace(a.ChecksumURL) != ""
 }
 
 func (m *KernelManager) fetchReleasePayload(ctx context.Context, apiURL string) ([]ReleaseInfo, error) {
@@ -240,8 +300,7 @@ func SelectReleaseAsset(assets []ReleaseAsset, goos, goarch string) *ReleaseAsse
 			strings.Contains(n, "chromedriver") || strings.Contains(n, "source") {
 			return -1
 		}
-		isArm := strings.Contains(n, "arm64") || strings.Contains(n, "aarch64")
-		isX64 := strings.Contains(n, "x64") || strings.Contains(n, "x86_64") || strings.Contains(n, "amd64") || strings.Contains(n, "win64")
+		isArm, isX64 := releaseArchitectures(n)
 		if goarch == "amd64" && isArm && !isX64 || goarch == "arm64" && isX64 && !isArm {
 			return -1
 		}

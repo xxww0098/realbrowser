@@ -12,7 +12,11 @@ import (
 // crash releases the OS lock and concurrent installers do not remove each
 // other's partially extracted files.
 func AcquireInstallLock(ctx context.Context, root string, onWait func()) (*os.File, error) {
-	file, err := os.OpenFile(filepath.Join(root, ".install.lock"), os.O_CREATE|os.O_RDWR, 0o600)
+	return acquireFileLock(ctx, filepath.Join(root, ".install.lock"), onWait)
+}
+
+func acquireFileLock(ctx context.Context, path string, onWait func()) (*os.File, error) {
+	file, err := os.OpenFile(path, os.O_CREATE|os.O_RDWR, 0o600)
 	if err != nil {
 		return nil, err
 	}

@@ -119,7 +119,7 @@ func TestFingerprintPreferencesRoundTrip(t *testing.T) {
 }
 
 func TestAutomaticUpdateSelectsAnInstallableArchitecture(t *testing.T) {
-	win64 := []ReleaseAsset{{Name: "chromium_windows_x64.zip"}}
+	win64 := []ReleaseAsset{{Name: "chromium_windows_x64.zip", DownloadURL: "https://example.test/browser.zip", Digest: fmt.Sprintf("sha256:%064x", 1)}}
 	releases := []ReleaseInfo{
 		{TagName: "153", Assets: []ReleaseAsset{{Name: "chromium_windows_x64.exe"}}},
 		{TagName: "latest-build", Assets: win64},
@@ -128,7 +128,7 @@ func TestAutomaticUpdateSelectsAnInstallableArchitecture(t *testing.T) {
 		{TagName: "155", Prerelease: true, Assets: win64},
 		{TagName: "152", Assets: []ReleaseAsset{{Name: "chromium_windows_arm64.zip"}}},
 		{TagName: "151.0.2", Assets: win64},
-		{TagName: "v151.0.10", Assets: []ReleaseAsset{{Name: "chromium_windows_x64.zip"}, {Name: "SHA256SUMS", DownloadURL: "https://example.test/sums"}}},
+		{TagName: "v151.0.10", Assets: []ReleaseAsset{{Name: "chromium_windows_x64.zip", DownloadURL: "https://example.test/browser.zip"}, {Name: "SHA256SUMS", DownloadURL: "https://example.test/sums"}}},
 	}
 	m := KernelManager{GOOS: "windows", GOARCH: "amd64"}
 	auto, ok := m.pickRelease(releases, true)
@@ -138,5 +138,57 @@ func TestAutomaticUpdateSelectsAnInstallableArchitecture(t *testing.T) {
 	manual, ok := m.pickRelease(releases, false)
 	if !ok || manual.TagName != "153" {
 		t.Fatalf("manual candidate = %+v", manual)
+	}
+}
+
+func TestAutomaticUpdateRejectsUnusableAssets(t *testing.T) {
+	digest := fmt.Sprintf("sha256:%064x", 1)
+	asset := func(name, checksum string, size int64) ReleaseAsset {
+		return ReleaseAsset{Name: name, DownloadURL: "https://example.test/" + name, Digest: checksum, Size: size}
+	}
+	m := KernelManager{GOOS: "linux", GOARCH: "arm64"}
+	releases := []ReleaseInfo{
+		{TagName: "155", Assets: []ReleaseAsset{asset("chromium-linux-arm64.tar.xz", digest, 32)}},
+		{TagName: "154", Assets: []ReleaseAsset{asset("chromium-linux.tar.xz", digest, 0)}},
+		{TagName: "153", Assets: []ReleaseAsset{asset("chromium-linux-arm64.tar.xz", "", 0)}},
+		{TagName: "152", Assets: []ReleaseAsset{asset("chromium-linux-arm64.AppImage", "", 0), asset("chromium-linux-aarch64.tar.xz", "", 0)}, Body: "chromium-linux-aarch64.tar.xz " + digest},
+	}
+	rel, ok := m.pickRelease(releases, true)
+	if !ok || rel.TagName != "152" || rel.LatestTag != "155" || rel.Matched.Name != "chromium-linux-aarch64.tar.xz" {
+		t.Fatalf("update candidate: %+v", rel)
+	}
+	if rel, ok := m.pickRelease(releases[:3], true); ok || rel == nil || rel.Matched != nil {
+		t.Fatalf("unexpected automatic download: %+v", rel)
+	}
+	srv := httptest.NewServer(http.HandlerFunc(func(http.ResponseWriter, *http.Request) {
+		t.Error("attempted to download a known empty archive")
+	}))
+	defer srv.Close()
+	empty := releases[0]
+	empty.Matched = &empty.Assets[0]
+	empty.Matched.DownloadURL = srv.URL
+	if _, changed, err := m.ActivateRelease(t.Context(), t.TempDir(), "", &empty, nil); err == nil || changed {
+		t.Fatalf("activated an empty archive: changed=%v err=%v", changed, err)
+	}
+
+	pinned, _ := PinnedRelease("darwin", "arm64")
+	m.GOOS, m.GOARCH = "darwin", "arm64"
+	releases = []ReleaseInfo{{TagName: PinnedVersion, Assets: []ReleaseAsset{pinned.Asset()}}}
+	releases[0].Assets[0].SHA256 = ""
+	if rel, ok := m.pickRelease(releases, true); !ok || rel.Matched.SHA256 != pinned.SHA256 {
+		t.Fatal("lost verified macOS ARM64 build with an unqualified filename")
+	}
+	releases[0].Assets[0].Digest = digest
+	if _, ok := m.pickRelease(releases, true); ok {
+		t.Fatal("accepted changed bytes for a pinned build")
+	}
+	releases[0].Assets[0] = pinned.Asset()
+	m.GOARCH = "amd64"
+	if _, ok := m.pickRelease(releases, true); ok {
+		t.Fatal("advertised an ARM64 pinned build to macOS x64")
+	}
+	releases[0].Assets = []ReleaseAsset{asset("chromium-macos-universal2.dmg", digest, 0)}
+	if _, ok := m.pickRelease(releases, true); !ok {
+		t.Fatal("lost an explicitly universal macOS build")
 	}
 }

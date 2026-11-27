@@ -114,7 +114,10 @@ func (m *KernelManager) ActivateRelease(ctx context.Context, dir, current string
 		}
 	}
 	asset := *rel.Matched
-	if NormalizeSHA256(asset.SHA256) == "" && NormalizeSHA256(asset.Digest) == "" && asset.ChecksumURL == "" {
+	if asset.emptyXZArchive() {
+		return InstalledRelease{}, false, errors.New("发行包过小，无法包含浏览器")
+	}
+	if !asset.hasChecksum() {
 		return InstalledRelease{}, false, errors.New("发行包缺少 SHA-256 校验值")
 	}
 	versions := filepath.Join(dir, "versions")
