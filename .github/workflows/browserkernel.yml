@@ -1,0 +1,39 @@
+name: Browser kernel
+
+on:
+  push:
+    paths:
+      - 'browserkernel/**'
+      - '.github/workflows/browserkernel.yml'
+  pull_request:
+    paths:
+      - 'browserkernel/**'
+      - '.github/workflows/browserkernel.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-go@v7
+        with:
+          go-version-file: browserkernel/go.mod
+          cache-dependency-path: browserkernel/go.sum
+      - run: go -C browserkernel test -short -race ./...
+      - run: go -C browserkernel vet ./...
+      - run: node --test browserkernel/downloader/*.test.mjs
+
+  windows:
+    runs-on: windows-latest
+    env:
+      CGO_ENABLED: '0'
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-go@v7
+        with:
+          go-version-file: browserkernel/go.mod
+          cache-dependency-path: browserkernel/go.sum
+      - run: go -C browserkernel test -run "Test(Registry|UpdateKeepsLastGoodVersion|FingerprintPreferencesRoundTrip)" ./...
